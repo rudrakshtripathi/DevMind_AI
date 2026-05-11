@@ -122,14 +122,14 @@ function QAThread({ projectId }: { projectId: number }) {
   const qc = useQueryClient();
 
   const { data: questions, isLoading } = useListCodebaseQuestions(projectId);
-  const { mutate: queryCodebase, isPending } = useQueryCodebase(projectId, {
+  const { mutate: queryCodebase, isPending } = useQueryCodebase({
     mutation: {
       onSuccess: () => {
         setQuestion("");
         qc.invalidateQueries({ queryKey: [`/api/codebase/projects/${projectId}/questions`] });
       },
       onError: () => {
-        toast({ title: "Query failed", variant: "destructive" });
+        toast({ title: "Query failed — please try again", variant: "destructive" });
       },
     },
   });
@@ -137,7 +137,7 @@ function QAThread({ projectId }: { projectId: number }) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!question.trim()) return;
-    queryCodebase({ data: { question } });
+    queryCodebase({ id: projectId, data: { question } });
   }
 
   return (

@@ -134,28 +134,45 @@ export async function queryCodebaseKnowledge(
   const systemPrompt = `You are a codebase expert assistant. You have been given the contents of a software repository.
 Answer questions about the codebase by referencing specific files and line numbers where relevant.
 
-Return ONLY valid JSON with this exact structure:
+You MUST return ONLY a valid JSON object — no markdown fences, no preamble, no explanation outside the JSON.
+Use this exact structure:
 {
   "answer": "<detailed explanation answering the question, referencing specific code>",
   "sources": [
     { "file": "<filename>", "line": <line number> }
   ]
-}`;
+}
+
+If no codebase content is provided, still answer as best you can and return an empty sources array.`;
+
+  const filesContent = files.trim()
+    ? `Codebase contents:\n\n${files.slice(0, 60000)}\n\n`
+    : "No codebase content provided — answer based on the question alone.\n\n";
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5.4",
-    max_completion_tokens: 8192,
+    model: "gpt-4o",
+    max_tokens: 4096,
+    response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
       {
         role: "user",
-        content: `Codebase contents:\n\n${files.slice(0, 50000)}\n\nQuestion: ${question}`,
+        content: `${filesContent}Question: ${question}`,
       },
     ],
   });
 
-  const content = response.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(content) as CodebaseAnswer;
+  const content = response.choices[0]?.message?.content ?? "";
+
+  try {
+    const parsed = JSON.parse(content) as Partial<CodebaseAnswer>;
+    return {
+      answer: parsed.answer ?? (content || "No answer returned."),
+      sources: Array.isArray(parsed.sources) ? parsed.sources : [],
+    };
+  } catch {
+    return { answer: content || "Could not parse AI response.", sources: [] };
+  }
 }
 
 export interface IncidentAnalysis {
