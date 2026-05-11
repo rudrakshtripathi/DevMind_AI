@@ -1,44 +1,133 @@
 import { openai } from "@workspace/integrations-openai-ai-server";
 
-export interface Vulnerability {
-  severity: "critical" | "high" | "medium" | "low";
-  line: number;
-  description: string;
-  fix: string;
+// ─── SECURITY SCANNER TYPES ──────────────────────────────────────────────────
+
+export interface TaintFlowStep {
+  label: string;
+  detail: string;
 }
 
-export interface SecurityAnalysisResult {
-  severityScore: number;
-  vulnerabilities: Vulnerability[];
-  summary: string;
+export interface EnhancedVulnerability {
+  id: string;
+  title: string;
+  severity: "critical" | "high" | "medium" | "low" | "info";
+  riskScore: number;
+  confidence: number;
+  lineStart: number;
+  lineEnd?: number;
+  rootCause: string;
+  description: string;
+  attackScenario: string;
+  exploitPayload: string;
+  impactAnalysis: string;
+  owaspCategory: string;
+  cweId: string;
+  cweName: string;
+  remediationSteps: string[];
+  vulnerableCode: string;
+  secureCode: string;
+  taintFlow: TaintFlowStep[];
+  aiReasoning: string;
+  bestPractices: string[];
+}
+
+export interface ChainedVulnerability {
+  title: string;
+  steps: string[];
+  severity: "critical" | "high" | "medium" | "low";
+}
+
+export interface EnhancedSecurityResult {
+  appSecurityScore: number;
+  riskPosture: "critical" | "high" | "medium" | "low" | "secure";
+  severityBreakdown: { critical: number; high: number; medium: number; low: number; info: number };
+  executiveSummary: string;
+  overallSummary: string;
+  vulnerabilities: EnhancedVulnerability[];
+  chainedVulnerabilities: ChainedVulnerability[];
+  securityArchitectureInsights: string[];
+  topPriorities: string[];
+  detectedFrameworks: string[];
 }
 
 export async function analyzeCodeSecurity(
   code: string,
   language: string,
   filename?: string
-): Promise<SecurityAnalysisResult> {
-  const systemPrompt = `You are an expert security engineer specializing in code vulnerability analysis.
-Analyze code for security vulnerabilities including: SQL injection, XSS, CSRF, insecure dependencies,
-hardcoded secrets, path traversal, insecure deserialization, weak cryptography, OWASP Top 10 issues.
+): Promise<EnhancedSecurityResult & { severityScore: number; summary: string }> {
+  const systemPrompt = `You are an elite application security engineer and AI code auditor equivalent to Snyk, Semgrep, CodeQL, and Checkmarx combined.
 
-Return ONLY valid JSON with this exact structure:
+Perform deep semantic analysis of the provided source code. Understand execution flow, data taint paths, and contextual exploitability. Do NOT rely on simple keyword matching — reason about actual exploitability.
+
+Return ONLY valid JSON matching this EXACT schema:
+
 {
-  "severityScore": <number 0-10, where 10 is most severe>,
+  "appSecurityScore": <0-10, where 0 = insecure, 10 = secure>,
+  "riskPosture": "<critical|high|medium|low|secure>",
+  "severityBreakdown": { "critical": <int>, "high": <int>, "medium": <int>, "low": <int>, "info": <int> },
+  "executiveSummary": "<3-4 sentence executive-level summary of security posture, key risks, and recommended priorities>",
+  "overallSummary": "<technical 2-3 sentence summary for developers>",
+  "detectedFrameworks": ["<detected framework or runtime e.g. Express, React, Flask>"],
   "vulnerabilities": [
     {
-      "severity": "<critical|high|medium|low>",
-      "line": <line number where issue exists>,
-      "description": "<clear description of the vulnerability and why it's dangerous>",
-      "fix": "<corrected code or specific remediation steps>"
+      "id": "vuln_<n>",
+      "title": "<vulnerability title e.g. SQL Injection via User Input>",
+      "severity": "<critical|high|medium|low|info>",
+      "riskScore": <0.0-10.0>,
+      "confidence": <0-100 integer percentage>,
+      "lineStart": <line number>,
+      "lineEnd": <line number or same as lineStart>,
+      "rootCause": "<deep explanation of WHY the vulnerability exists — which principle is violated, which code pattern causes it>",
+      "description": "<technical description of the vulnerability>",
+      "attackScenario": "<realistic step-by-step explanation of how an attacker would exploit this>",
+      "exploitPayload": "<concrete example payload or attack string an attacker would use>",
+      "impactAnalysis": "<what can an attacker achieve: RCE, data theft, auth bypass, privilege escalation, etc.>",
+      "owaspCategory": "<e.g. A03:2021 - Injection>",
+      "cweId": "<e.g. CWE-89>",
+      "cweName": "<e.g. Improper Neutralization of Special Elements used in an SQL Command>",
+      "remediationSteps": ["<step 1>", "<step 2>", "<step 3>"],
+      "vulnerableCode": "<the exact vulnerable code snippet>",
+      "secureCode": "<the corrected secure code with comments explaining the fix>",
+      "taintFlow": [
+        { "label": "<taint source e.g. req.query.id>", "detail": "<what this value represents>" },
+        { "label": "<intermediate step e.g. String concatenation>", "detail": "<how data flows here>" },
+        { "label": "<dangerous sink e.g. db.query()>", "detail": "<why this is dangerous>" }
+      ],
+      "aiReasoning": "<explain the pattern matched, execution flow traced, taint path, and why this is exploitable vs false positive>",
+      "bestPractices": ["<practice 1>", "<practice 2>", "<practice 3>"]
     }
   ],
-  "summary": "<2-3 sentence overall security assessment>"
+  "chainedVulnerabilities": [
+    {
+      "title": "<name of the attack chain>",
+      "steps": ["<step 1>", "<step 2>", "<step 3>"],
+      "severity": "<critical|high|medium|low>"
+    }
+  ],
+  "securityArchitectureInsights": [
+    "<insight about unsafe design patterns, weak authentication, poor secret handling, etc.>"
+  ],
+  "topPriorities": [
+    "<prioritized action item 1>",
+    "<prioritized action item 2>",
+    "<prioritized action item 3>"
+  ]
 }
 
-If no vulnerabilities found, return empty array and severityScore of 0.`;
+Rules:
+- If no vulnerabilities exist, return empty arrays and appSecurityScore of 9-10
+- Be realistic — only flag actual exploitable issues, not informational style nits unless truly important
+- Always provide concrete exploitPayload examples
+- Always provide before/after code in vulnerableCode and secureCode
+- taintFlow must have at least 2 steps (source → sink) for injection-type vulns`;
 
-  const userPrompt = `Analyze this ${language} code${filename ? ` (file: ${filename})` : ""} for security vulnerabilities:\n\n\`\`\`${language}\n${code}\n\`\`\``;
+  const userPrompt = `Perform a deep security audit of this ${language} code${filename ? ` (file: ${filename})` : ""}:
+
+\`\`\`${language}
+${code.slice(0, 30000)}
+\`\`\`
+
+Identify all security vulnerabilities with full root cause analysis, attack scenarios, CWE/OWASP mapping, and secure code rewrites.`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -51,26 +140,47 @@ If no vulnerabilities found, return empty array and severityScore of 0.`;
   });
 
   const content = response.choices[0]?.message?.content ?? "{}";
+
   try {
-    return JSON.parse(content) as SecurityAnalysisResult;
+    const parsed = JSON.parse(content) as Partial<EnhancedSecurityResult>;
+    const result: EnhancedSecurityResult = {
+      appSecurityScore: parsed.appSecurityScore ?? 5,
+      riskPosture: parsed.riskPosture ?? "medium",
+      severityBreakdown: parsed.severityBreakdown ?? { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
+      executiveSummary: parsed.executiveSummary ?? "",
+      overallSummary: parsed.overallSummary ?? "",
+      detectedFrameworks: Array.isArray(parsed.detectedFrameworks) ? parsed.detectedFrameworks : [],
+      vulnerabilities: Array.isArray(parsed.vulnerabilities) ? parsed.vulnerabilities : [],
+      chainedVulnerabilities: Array.isArray(parsed.chainedVulnerabilities) ? parsed.chainedVulnerabilities : [],
+      securityArchitectureInsights: Array.isArray(parsed.securityArchitectureInsights) ? parsed.securityArchitectureInsights : [],
+      topPriorities: Array.isArray(parsed.topPriorities) ? parsed.topPriorities : [],
+    };
+    // Compute legacy fields for DB compat
+    const legacySeverityScore = 10 - result.appSecurityScore;
+    return { ...result, severityScore: legacySeverityScore, summary: result.overallSummary };
   } catch {
-    return { severityScore: 0, vulnerabilities: [], summary: content };
+    return {
+      appSecurityScore: 5,
+      riskPosture: "medium",
+      severityBreakdown: { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
+      executiveSummary: content,
+      overallSummary: content,
+      detectedFrameworks: [],
+      vulnerabilities: [],
+      chainedVulnerabilities: [],
+      securityArchitectureInsights: [],
+      topPriorities: [],
+      severityScore: 5,
+      summary: content,
+    };
   }
 }
 
 // ─── ENHANCED WORKFLOW TYPES ───────────────────────────────────────────────
 
 export type NodeType =
-  | "trigger"
-  | "action"
-  | "ai"
-  | "decision"
-  | "database"
-  | "webhook"
-  | "parallel"
-  | "delay"
-  | "retry"
-  | "human_approval";
+  | "trigger" | "action" | "ai" | "decision" | "database"
+  | "webhook" | "parallel" | "delay" | "retry" | "human_approval";
 
 export interface DetailedStep {
   id: string;
@@ -215,7 +325,7 @@ Return ONLY valid JSON matching this EXACT schema (no markdown, no extra text):
       "from": "<step name>",
       "to": "<step name>",
       "dataLabel": "<short label e.g. 'PR metadata'>",
-      "payload": "<JSON-like structure of data passed e.g. { prId, author, branchName }"
+      "payload": "<JSON-like structure of data passed>"
     }
   ],
   "errorHandling": [
@@ -230,37 +340,21 @@ Return ONLY valid JSON matching this EXACT schema (no markdown, no extra text):
   ],
   "securityFindings": [
     {
-      "type": "<finding type e.g. 'Exposed Webhook URL'>",
+      "type": "<finding type>",
       "severity": "<critical|high|medium|low>",
       "description": "<what the risk is>",
       "recommendation": "<how to mitigate>"
     }
   ],
   "securitySeverityScore": <1-10 integer>,
-  "aiReasoning": "<3-5 paragraph explanation of why the workflow is designed this way — step ordering, service choices, retry logic, security decisions>",
-  "optimizationSuggestions": [
-    "<suggestion 1>",
-    "<suggestion 2>",
-    "<suggestion 3>"
-  ],
+  "aiReasoning": "<3-5 paragraph explanation of why the workflow is designed this way>",
+  "optimizationSuggestions": ["<suggestion 1>", "<suggestion 2>", "<suggestion 3>"],
   "diagram": {
     "nodes": [
-      {
-        "id": "<same as step id>",
-        "label": "<short label>",
-        "service": "<service>",
-        "type": "<node type>",
-        "action": "<action>",
-        "condition": "<condition or null>"
-      }
+      { "id": "<same as step id>", "label": "<short label>", "service": "<service>", "type": "<node type>", "action": "<action>", "condition": "<condition or null>" }
     ],
     "edges": [
-      {
-        "from": "<source step id>",
-        "to": "<target step id>",
-        "label": "<optional label e.g. 'on success'>",
-        "type": "<success|failure|condition|default>"
-      }
+      { "from": "<source step id>", "to": "<target step id>", "label": "<optional label>", "type": "<success|failure|condition|default>" }
     ]
   },
   "simulationSteps": [
@@ -276,7 +370,7 @@ Return ONLY valid JSON matching this EXACT schema (no markdown, no extra text):
   ]
 }
 
-Be specific, realistic, and production-grade. Use real API field names where known. Include branching, error handling, and at least one decision node for any non-trivial workflow. Always include 4-8 steps minimum.`;
+Be specific, realistic, and production-grade. Include branching, error handling, and at least one decision node. Always include 4-8 steps minimum.`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -312,6 +406,8 @@ Be specific, realistic, and production-grade. Use real API field names where kno
   }
 }
 
+// ─── CODEBASE AI ─────────────────────────────────────────────────────────────
+
 export interface CodebaseAnswer {
   answer: string;
   sources: Array<{ file: string; line: number }>;
@@ -324,7 +420,7 @@ export async function queryCodebaseKnowledge(
   const systemPrompt = `You are a codebase expert assistant. You have been given the contents of a software repository.
 Answer questions about the codebase by referencing specific files and line numbers where relevant.
 
-You MUST return ONLY a valid JSON object — no markdown fences, no preamble, no explanation outside the JSON.
+You MUST return ONLY a valid JSON object — no markdown fences, no preamble.
 Use this exact structure:
 {
   "answer": "<detailed explanation answering the question, referencing specific code>",
@@ -345,15 +441,11 @@ If no codebase content is provided, still answer as best you can and return an e
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: `${filesContent}Question: ${question}`,
-      },
+      { role: "user", content: `${filesContent}Question: ${question}` },
     ],
   });
 
   const content = response.choices[0]?.message?.content ?? "";
-
   try {
     const parsed = JSON.parse(content) as Partial<CodebaseAnswer>;
     return {
@@ -364,6 +456,8 @@ If no codebase content is provided, still answer as best you can and return an e
     return { answer: content || "Could not parse AI response.", sources: [] };
   }
 }
+
+// ─── ROOT CAUSE ANALYZER ─────────────────────────────────────────────────────
 
 export interface IncidentAnalysis {
   rootCause: string;
@@ -404,9 +498,7 @@ Return ONLY valid JSON with this exact structure:
   }
 }
 
-export async function indexCodebase(
-  files: string
-): Promise<{ fileCount: number }> {
+export async function indexCodebase(files: string): Promise<{ fileCount: number }> {
   try {
     const parsed = JSON.parse(files) as Record<string, string>;
     return { fileCount: Object.keys(parsed).length };

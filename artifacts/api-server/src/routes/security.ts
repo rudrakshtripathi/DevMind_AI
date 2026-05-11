@@ -13,7 +13,7 @@ import { logger } from "../lib/logger.js";
 
 const router: IRouter = Router();
 
-router.get("/security/scans", async (req, res): Promise<void> => {
+router.get("/security/scans", async (_req, res): Promise<void> => {
   const scans = await db
     .select()
     .from(securityScansTable)
@@ -53,7 +53,8 @@ router.post("/security/scans", async (req, res): Promise<void> => {
         .set({
           status: "complete",
           severityScore: result.severityScore,
-          vulnerabilities: JSON.stringify(result.vulnerabilities),
+          // Store full enhanced result in vulnerabilities field
+          vulnerabilities: JSON.stringify(result),
           summary: result.summary,
         })
         .where(eq(securityScansTable.id, scan.id));

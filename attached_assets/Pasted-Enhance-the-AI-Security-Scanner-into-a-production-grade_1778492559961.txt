@@ -1,0 +1,357 @@
+Enhance the AI Security Scanner into a production-grade AI-powered application security analysis platform that performs deep reasoning, contextual vulnerability analysis, exploit explanation, remediation guidance, and security risk visualization instead of only detecting simple patterns.
+
+The scanner must behave like an intelligent AI security auditor similar to:
+- Snyk
+- Semgrep
+- CodeQL
+- Checkmarx
+- SonarQube
+- GitHub Advanced Security
+
+The system should deeply analyze source code, understand execution flow, identify root causes, explain exploitability, and generate detailed remediation guidance.
+
+========================================
+CORE REQUIREMENTS
+========================================
+
+The scanner must:
+- Understand code semantics
+- Detect vulnerabilities contextually
+- Explain WHY a vulnerability exists
+- Explain HOW attackers exploit it
+- Explain IMPACT and severity
+- Explain HOW to fix it
+- Generate secure alternative code
+- Identify root causes
+- Provide confidence scoring
+- Map vulnerabilities to OWASP & CWE
+- Detect multi-step chained vulnerabilities
+
+The scanner should support:
+- JavaScript
+- TypeScript
+- Python
+- Java
+- C/C++
+- Go
+- PHP
+- Rust
+- Shell scripts
+- Node.js
+- React
+- Express
+- Django
+- Flask
+- Spring Boot
+
+========================================
+DETAILED ANALYSIS OUTPUT
+========================================
+
+For every vulnerability detected, generate ALL of the following:
+
+1. VULNERABILITY TITLE
+Example:
+- SQL Injection
+- Command Injection
+- Cross Site Scripting (XSS)
+- SSRF
+- Hardcoded Secret
+- Insecure Deserialization
+
+2. SEVERITY SCORE
+Provide:
+- Critical
+- High
+- Medium
+- Low
+- Informational
+
+Also generate:
+- CVSS-style score out of 10
+
+Example:
+Severity: Critical
+Risk Score: 9.8/10
+
+3. CONFIDENCE PERCENTAGE
+Example:
+Confidence: 96%
+
+The confidence score should depend on:
+- Code certainty
+- Input flow analysis
+- Exploitability
+- Context understanding
+
+4. VULNERABLE FILE & LINE NUMBER
+Example:
+auth.js : Line 24
+
+Highlight:
+- exact vulnerable lines
+- surrounding context
+- dangerous function calls
+
+5. ROOT CAUSE ANALYSIS
+Generate a detailed explanation:
+- WHY the vulnerability exists
+- WHICH code caused it
+- WHICH user input is dangerous
+- WHICH security principle is violated
+
+Example:
+“The application directly concatenates user-controlled input into a shell command using child_process.exec(), enabling attackers to execute arbitrary operating system commands.”
+
+6. ATTACK SCENARIO / EXPLOIT EXPLANATION
+Generate realistic attack examples.
+
+Example:
+?q=test; rm -rf /
+
+Explain:
+- how attacker abuses it
+- possible outcomes
+- privilege escalation risk
+- data theft risk
+- remote code execution risk
+
+7. IMPACT ANALYSIS
+Explain possible impacts:
+- Data leakage
+- Authentication bypass
+- RCE
+- Account takeover
+- Privilege escalation
+- Service disruption
+- Malware deployment
+
+8. OWASP MAPPING
+Map vulnerabilities to:
+OWASP Top 10
+
+Example:
+OWASP A03:2021 - Injection
+
+9. CWE MAPPING
+Provide CWE IDs.
+
+Example:
+CWE-78 → OS Command Injection
+CWE-79 → Cross Site Scripting
+CWE-89 → SQL Injection
+CWE-798 → Hardcoded Credentials
+
+10. SECURE REMEDIATION STEPS
+Generate step-by-step fixes.
+
+Example:
+1. Avoid child_process.exec()
+2. Use execFile/spawn with fixed arguments
+3. Validate and sanitize input
+4. Escape HTML output
+5. Move secrets to environment variables
+
+11. SECURE CODE REWRITE
+Generate secure replacement code automatically.
+
+Example:
+Replace:
+exec("grep " + q)
+
+With:
+spawn("grep", [validatedInput])
+
+Provide:
+- before/after comparison
+- secure implementation
+- comments explaining security fixes
+
+12. SECURITY BEST PRACTICES
+Suggest:
+- input validation
+- output encoding
+- least privilege
+- secret management
+- rate limiting
+- authentication improvements
+- secure logging
+- dependency scanning
+
+13. AI REASONING PANEL
+Add a section:
+“Why the AI flagged this”
+
+Explain:
+- pattern matched
+- execution flow
+- taint analysis reasoning
+- dangerous sinks
+- user-controlled data flow
+
+========================================
+ADVANCED ANALYSIS FEATURES
+========================================
+
+14. DATA FLOW & TAINT ANALYSIS
+Track:
+User Input → Processing → Dangerous Sink
+
+Example:
+req.query.q
+   ↓
+String concatenation
+   ↓
+child_process.exec()
+
+Visualize dangerous data flow.
+
+15. MULTI-VULNERABILITY CORRELATION
+Detect chained attacks.
+
+Example:
+Hardcoded Secret + Command Injection + XSS
+
+Explain:
+- primary root cause
+- secondary weaknesses
+- attack chain possibilities
+
+16. SECURITY ARCHITECTURE INSIGHTS
+Explain:
+- unsafe design patterns
+- insecure APIs
+- weak authentication flow
+- poor secret handling
+- dangerous permissions
+
+17. AI-POWERED FALSE POSITIVE REDUCTION
+The scanner should:
+- avoid simple regex-only detection
+- understand context
+- differentiate safe sanitization
+- verify exploitability before flagging
+
+18. FRAMEWORK-SPECIFIC DETECTION
+Understand framework-specific risks:
+- Express.js
+- Django
+- Flask
+- Spring Boot
+- React
+- Next.js
+
+Example:
+Detect unsafe dangerouslySetInnerHTML in React.
+
+========================================
+VISUAL & UI IMPROVEMENTS
+========================================
+
+19. MODERN SECURITY DASHBOARD
+Add:
+- Severity charts
+- Vulnerability distribution graphs
+- Risk heatmaps
+- Confidence indicators
+- Attack flow diagrams
+- Expandable code panels
+- Security badges
+- Animated scan progress
+
+20. EXPANDABLE VULNERABILITY CARDS
+Each issue card should contain:
+- Summary
+- Technical explanation
+- Exploit example
+- Secure fix
+- Code diff
+- Risk score
+- References
+
+21. CODE HIGHLIGHTING
+Highlight:
+- dangerous code
+- sanitized code
+- user input sources
+- vulnerable sinks
+
+22. SECURITY TIMELINE
+Show:
+- vulnerability discovery flow
+- attack chain simulation
+- exploit propagation path
+
+========================================
+ENTERPRISE FEATURES
+========================================
+
+23. COMPLIANCE SUPPORT
+Map findings to:
+- OWASP
+- CWE
+- NIST
+- PCI-DSS
+- ISO 27001
+
+24. SECURITY SCORING ENGINE
+Generate:
+- Application security score
+- Risk posture
+- Vulnerability density
+- Severity breakdown
+
+25. EXECUTIVE SUMMARY
+Generate:
+- Total vulnerabilities
+- Critical risks
+- Exploitable attack paths
+- Recommended priorities
+
+========================================
+AI-POWERED ENHANCEMENTS
+========================================
+
+26. SMART FIX RECOMMENDATIONS
+AI should:
+- prioritize fixes
+- identify root causes
+- recommend safest patterns
+- suggest architectural improvements
+
+27. SECURITY EDUCATION MODE
+Explain vulnerabilities in:
+- beginner mode
+- intermediate mode
+- expert mode
+
+28. SIMULATED ATTACK MODE
+Allow:
+- exploit simulation
+- attack walkthrough
+- payload examples
+- attack chain visualization
+
+========================================
+FINAL OUTPUT FORMAT
+========================================
+
+Every scan result must include:
+
+- Security Score
+- Vulnerability Count
+- Severity Distribution
+- Detailed Findings
+- Root Cause Analysis
+- Attack Scenario
+- Exploit Payload
+- OWASP Mapping
+- CWE Mapping
+- Remediation Steps
+- Secure Code Rewrite
+- AI Reasoning
+- Data Flow Visualization
+- Risk Prioritization
+- Security Recommendations
+
+The final experience should feel like an intelligent AI security engineer deeply analyzed the codebase instead of a simple keyword-based scanner.
