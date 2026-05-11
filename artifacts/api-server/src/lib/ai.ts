@@ -18,8 +18,8 @@ export async function analyzeCodeSecurity(
   language: string,
   filename?: string
 ): Promise<SecurityAnalysisResult> {
-  const systemPrompt = `You are an expert security engineer specializing in code vulnerability analysis. 
-Analyze code for security vulnerabilities including: SQL injection, XSS, CSRF, insecure dependencies, 
+  const systemPrompt = `You are an expert security engineer specializing in code vulnerability analysis.
+Analyze code for security vulnerabilities including: SQL injection, XSS, CSRF, insecure dependencies,
 hardcoded secrets, path traversal, insecure deserialization, weak cryptography, OWASP Top 10 issues.
 
 Return ONLY valid JSON with this exact structure:
@@ -41,8 +41,9 @@ If no vulnerabilities found, return empty array and severityScore of 0.`;
   const userPrompt = `Analyze this ${language} code${filename ? ` (file: ${filename})` : ""} for security vulnerabilities:\n\n\`\`\`${language}\n${code}\n\`\`\``;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5.4",
-    max_completion_tokens: 8192,
+    model: "gpt-4o",
+    max_tokens: 8192,
+    response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -50,76 +51,265 @@ If no vulnerabilities found, return empty array and severityScore of 0.`;
   });
 
   const content = response.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(content) as SecurityAnalysisResult;
-  return parsed;
+  try {
+    return JSON.parse(content) as SecurityAnalysisResult;
+  } catch {
+    return { severityScore: 0, vulnerabilities: [], summary: content };
+  }
 }
 
-export interface PipelineStep {
+// ─── ENHANCED WORKFLOW TYPES ───────────────────────────────────────────────
+
+export type NodeType =
+  | "trigger"
+  | "action"
+  | "ai"
+  | "decision"
+  | "database"
+  | "webhook"
+  | "parallel"
+  | "delay"
+  | "retry"
+  | "human_approval";
+
+export interface DetailedStep {
   id: string;
+  stepNumber: number;
   name: string;
+  type: NodeType;
   service: string;
-  action: string;
   trigger?: string;
+  action: string;
+  inputData: string;
+  outputData: string;
+  dependencies: string[];
+  estimatedTime: string;
+  failurePossibilities: string[];
+  retryStrategy: string;
+  securityRisk?: string;
   condition?: string;
+  isBranch?: boolean;
+  branchOf?: string;
+}
+
+export interface DataFlowItem {
+  from: string;
+  to: string;
+  dataLabel: string;
+  payload: string;
+}
+
+export interface ConditionalLogic {
+  id: string;
+  condition: string;
+  truePath: string;
+  falsePath: string;
+  type: "filter" | "branch" | "retry_loop" | "parallel" | "fallback";
+}
+
+export interface ErrorScenario {
+  step: string;
+  scenario: string;
+  retryCount: number;
+  retryDelay: string;
+  fallback: string;
+  escalation: string;
+}
+
+export interface SecurityFinding {
+  type: string;
+  severity: "critical" | "high" | "medium" | "low";
+  description: string;
+  recommendation: string;
+}
+
+export interface SimulationStep {
+  stepId: string;
+  name: string;
+  status: "success" | "failure" | "skipped";
+  mockInput: string;
+  mockOutput: string;
+  duration: string;
+  notes: string;
 }
 
 export interface DiagramNode {
   id: string;
   label: string;
   service: string;
+  type: NodeType;
   action: string;
+  condition?: string;
 }
 
 export interface DiagramEdge {
   from: string;
   to: string;
+  label?: string;
+  type?: "success" | "failure" | "condition" | "default";
 }
 
-export interface WorkflowResult {
-  steps: PipelineStep[];
-  diagram: {
-    nodes: DiagramNode[];
-    edges: DiagramEdge[];
-  };
+export interface EnhancedWorkflowResult {
+  title: string;
+  summary: string;
+  businessPurpose: string;
+  complexityScore: number;
+  estimatedTotalTime: string;
+  steps: DetailedStep[];
+  conditions: ConditionalLogic[];
+  dataFlow: DataFlowItem[];
+  errorHandling: ErrorScenario[];
+  securityFindings: SecurityFinding[];
+  securitySeverityScore: number;
+  aiReasoning: string;
+  optimizationSuggestions: string[];
+  diagram: { nodes: DiagramNode[]; edges: DiagramEdge[] };
+  simulationSteps: SimulationStep[];
 }
 
-export async function generateWorkflow(description: string): Promise<WorkflowResult> {
-  const systemPrompt = `You are an automation pipeline architect. Convert natural language workflow descriptions 
-into structured pipeline definitions.
+export async function generateWorkflow(description: string): Promise<EnhancedWorkflowResult> {
+  const systemPrompt = `You are an expert enterprise automation architect with deep knowledge of platforms like Zapier, n8n, Make.com, LangFlow, and Microsoft Power Automate.
 
-Return ONLY valid JSON with this exact structure:
+When given a workflow description, generate a comprehensive, production-grade automation specification.
+
+Return ONLY valid JSON matching this EXACT schema (no markdown, no extra text):
+
 {
+  "title": "<concise workflow title>",
+  "summary": "<2-3 sentence plain English explanation of the entire automation>",
+  "businessPurpose": "<why this automation provides business value and expected outcomes>",
+  "complexityScore": <1-10 integer>,
+  "estimatedTotalTime": "<e.g. '3-8 seconds per trigger'>",
   "steps": [
     {
       "id": "<step_id>",
-      "name": "<human readable name>",
-      "service": "<service name e.g. GitHub, Slack, Notion, JIRA, Email>",
-      "action": "<action e.g. 'PR merged', 'Send message', 'Update page'>",
-      "trigger": "<optional: what triggers this step>",
-      "condition": "<optional: condition for execution>"
+      "stepNumber": <integer starting at 1>,
+      "name": "<human readable step name>",
+      "type": "<trigger|action|ai|decision|database|webhook|parallel|delay|retry|human_approval>",
+      "service": "<service name e.g. GitHub, Slack, OpenAI, PostgreSQL>",
+      "trigger": "<what triggers this step, or null>",
+      "action": "<specific action performed>",
+      "inputData": "<what data this step receives, with field names>",
+      "outputData": "<what data this step produces, with field names>",
+      "dependencies": ["<ids of steps this depends on>"],
+      "estimatedTime": "<e.g. '200ms'>",
+      "failurePossibilities": ["<failure scenario 1>", "<failure scenario 2>"],
+      "retryStrategy": "<retry logic e.g. '3 retries with 2s exponential backoff'>",
+      "securityRisk": "<security concern or null>",
+      "condition": "<condition expression or null>",
+      "isBranch": false,
+      "branchOf": null
     }
+  ],
+  "conditions": [
+    {
+      "id": "<condition_id>",
+      "condition": "<IF ... THEN ... description>",
+      "truePath": "<step id for true branch>",
+      "falsePath": "<step id for false branch>",
+      "type": "<filter|branch|retry_loop|parallel|fallback>"
+    }
+  ],
+  "dataFlow": [
+    {
+      "from": "<step name>",
+      "to": "<step name>",
+      "dataLabel": "<short label e.g. 'PR metadata'>",
+      "payload": "<JSON-like structure of data passed e.g. { prId, author, branchName }"
+    }
+  ],
+  "errorHandling": [
+    {
+      "step": "<step name>",
+      "scenario": "<what could go wrong>",
+      "retryCount": <integer>,
+      "retryDelay": "<e.g. '2s exponential'>",
+      "fallback": "<fallback action>",
+      "escalation": "<who/what gets notified on failure>"
+    }
+  ],
+  "securityFindings": [
+    {
+      "type": "<finding type e.g. 'Exposed Webhook URL'>",
+      "severity": "<critical|high|medium|low>",
+      "description": "<what the risk is>",
+      "recommendation": "<how to mitigate>"
+    }
+  ],
+  "securitySeverityScore": <1-10 integer>,
+  "aiReasoning": "<3-5 paragraph explanation of why the workflow is designed this way — step ordering, service choices, retry logic, security decisions>",
+  "optimizationSuggestions": [
+    "<suggestion 1>",
+    "<suggestion 2>",
+    "<suggestion 3>"
   ],
   "diagram": {
     "nodes": [
-      { "id": "<same as step id>", "label": "<step name>", "service": "<service>", "action": "<action>" }
+      {
+        "id": "<same as step id>",
+        "label": "<short label>",
+        "service": "<service>",
+        "type": "<node type>",
+        "action": "<action>",
+        "condition": "<condition or null>"
+      }
     ],
     "edges": [
-      { "from": "<source step id>", "to": "<target step id>" }
+      {
+        "from": "<source step id>",
+        "to": "<target step id>",
+        "label": "<optional label e.g. 'on success'>",
+        "type": "<success|failure|condition|default>"
+      }
     ]
-  }
-}`;
+  },
+  "simulationSteps": [
+    {
+      "stepId": "<step id>",
+      "name": "<step name>",
+      "status": "<success|failure|skipped>",
+      "mockInput": "<realistic mock input data as JSON string>",
+      "mockOutput": "<realistic mock output data as JSON string>",
+      "duration": "<simulated duration e.g. '342ms'>",
+      "notes": "<what happened in this step>"
+    }
+  ]
+}
+
+Be specific, realistic, and production-grade. Use real API field names where known. Include branching, error handling, and at least one decision node for any non-trivial workflow. Always include 4-8 steps minimum.`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5.4",
-    max_completion_tokens: 8192,
+    model: "gpt-4o",
+    max_tokens: 8192,
+    response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
-      { role: "user", content: `Generate an automation pipeline for: ${description}` },
+      { role: "user", content: `Generate a production-grade automation workflow for:\n\n"${description}"` },
     ],
   });
 
   const content = response.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(content) as WorkflowResult;
+  try {
+    return JSON.parse(content) as EnhancedWorkflowResult;
+  } catch {
+    return {
+      title: description,
+      summary: "Workflow generation failed. Please try again.",
+      businessPurpose: "",
+      complexityScore: 1,
+      estimatedTotalTime: "unknown",
+      steps: [],
+      conditions: [],
+      dataFlow: [],
+      errorHandling: [],
+      securityFindings: [],
+      securitySeverityScore: 0,
+      aiReasoning: "",
+      optimizationSuggestions: [],
+      diagram: { nodes: [], edges: [] },
+      simulationSteps: [],
+    };
+  }
 }
 
 export interface CodebaseAnswer {
@@ -197,8 +387,9 @@ Return ONLY valid JSON with this exact structure:
 }`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5.4",
-    max_completion_tokens: 8192,
+    model: "gpt-4o",
+    max_tokens: 4096,
+    response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: `Analyze these logs/traces:\n\n${logInput}` },
@@ -206,7 +397,11 @@ Return ONLY valid JSON with this exact structure:
   });
 
   const content = response.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(content) as IncidentAnalysis;
+  try {
+    return JSON.parse(content) as IncidentAnalysis;
+  } catch {
+    return { rootCause: content, affectedComponent: "Unknown", confidence: 0.5, remediation: "", severity: "medium" };
+  }
 }
 
 export async function indexCodebase(

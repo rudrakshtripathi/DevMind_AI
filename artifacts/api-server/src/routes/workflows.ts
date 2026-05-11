@@ -37,15 +37,18 @@ router.post("/workflows", async (req, res): Promise<void> => {
 
   res.status(201).json(GetWorkflowResponse.parse(workflow));
 
-  // Run AI analysis in background
+  // Run AI generation in background
   (async () => {
     try {
       const result = await generateWorkflow(parsed.data.description);
+
       await db
         .update(workflowsTable)
         .set({
           status: "complete",
-          pipelineJson: JSON.stringify(result.steps),
+          // Store the entire enhanced workflow in pipelineJson
+          pipelineJson: JSON.stringify(result),
+          // Also keep a separate diagram blob for legacy compat
           diagramJson: JSON.stringify(result.diagram),
         })
         .where(eq(workflowsTable.id, workflow.id));
