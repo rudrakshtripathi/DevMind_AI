@@ -3,20 +3,30 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: DevMind AI API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: security
+    description: AI Security Scanner module
+  - name: workflow
+    description: AI Workflow Builder module
+  - name: codebase
+    description: Codebase Knowledge AI module
+  - name: analyzer
+    description: AI Root Cause Analyzer module
+  - name: history
+    description: Analysis history and dashboard
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +34,290 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Security Scanner
+  /security/scans:
+    get:
+      operationId: listSecurityScans
+      tags: [security]
+      summary: List all security scans
+      responses:
+        "200":
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SecurityScan"
+    post:
+      operationId: createSecurityScan
+      tags: [security]
+      summary: Submit code for security analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecurityScanInput"
+      responses:
+        "201":
+          description: Scan created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecurityScan"
+
+  /security/scans/{id}:
+    get:
+      operationId: getSecurityScan
+      tags: [security]
+      summary: Get a specific security scan result
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scan details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecurityScan"
+        "404":
+          description: Not found
+
+  /security/stats:
+    get:
+      operationId: getSecurityStats
+      tags: [security]
+      summary: Security scan statistics summary
+      responses:
+        "200":
+          description: Security stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecurityStats"
+
+  # Workflow Builder
+  /workflows:
+    get:
+      operationId: listWorkflows
+      tags: [workflow]
+      summary: List all generated workflows
+      responses:
+        "200":
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workflow"
+    post:
+      operationId: createWorkflow
+      tags: [workflow]
+      summary: Generate a workflow from natural language description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowInput"
+      responses:
+        "201":
+          description: Workflow generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+
+  /workflows/{id}:
+    get:
+      operationId: getWorkflow
+      tags: [workflow]
+      summary: Get a specific workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Workflow details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+        "404":
+          description: Not found
+
+  # Codebase Knowledge AI
+  /codebase/projects:
+    get:
+      operationId: listCodebaseProjects
+      tags: [codebase]
+      summary: List all indexed codebase projects
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CodebaseProject"
+    post:
+      operationId: createCodebaseProject
+      tags: [codebase]
+      summary: Index a new codebase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CodebaseProjectInput"
+      responses:
+        "201":
+          description: Project indexed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CodebaseProject"
+
+  /codebase/projects/{id}/query:
+    post:
+      operationId: queryCodebase
+      tags: [codebase]
+      summary: Ask a question about an indexed codebase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CodebaseQueryInput"
+      responses:
+        "200":
+          description: Query answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CodebaseQueryResult"
+
+  /codebase/projects/{id}/questions:
+    get:
+      operationId: listCodebaseQuestions
+      tags: [codebase]
+      summary: List past questions for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Question history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CodebaseQueryResult"
+
+  # Root Cause Analyzer
+  /analyzer/incidents:
+    get:
+      operationId: listIncidents
+      tags: [analyzer]
+      summary: List all analyzed incidents
+      responses:
+        "200":
+          description: List of incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Incident"
+    post:
+      operationId: createIncident
+      tags: [analyzer]
+      summary: Analyze logs or error traces for root cause
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncidentInput"
+      responses:
+        "201":
+          description: Incident analyzed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  /analyzer/incidents/{id}:
+    get:
+      operationId: getIncident
+      tags: [analyzer]
+      summary: Get a specific incident analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Incident details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+        "404":
+          description: Not found
+
+  # Dashboard / History
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [history]
+      summary: Overall usage stats across all modules
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent:
+    get:
+      operationId: getRecentActivity
+      tags: [history]
+      summary: Recent activity across all modules
+      responses:
+        "200":
+          description: Recent activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +328,228 @@ components:
       required:
         - status
 
+    # Security
+    SecurityScanInput:
+      type: object
+      required: [code, language]
+      properties:
+        code:
+          type: string
+          description: Source code to analyze
+        language:
+          type: string
+          description: Programming language (e.g. python, javascript, java)
+        filename:
+          type: ["string", "null"]
+          description: Optional filename for context
+
+    SecurityScan:
+      type: object
+      required: [id, code, language, status, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        language:
+          type: string
+        filename:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: "pending | complete | error"
+        severityScore:
+          type: ["number", "null"]
+          description: 0-10 severity score
+        vulnerabilities:
+          type: ["string", "null"]
+          description: JSON array of vulnerability findings
+        summary:
+          type: ["string", "null"]
+          description: AI-generated summary
+        createdAt:
+          type: string
+          format: date-time
+
+    SecurityStats:
+      type: object
+      required: [totalScans, criticalCount, highCount, mediumCount, lowCount, avgSeverity]
+      properties:
+        totalScans:
+          type: integer
+        criticalCount:
+          type: integer
+        highCount:
+          type: integer
+        mediumCount:
+          type: integer
+        lowCount:
+          type: integer
+        avgSeverity:
+          type: number
+
+    # Workflow
+    WorkflowInput:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+          description: Natural language description of the automation
+
+    Workflow:
+      type: object
+      required: [id, description, status, createdAt]
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+        status:
+          type: string
+          description: "pending | complete | error"
+        pipelineJson:
+          type: ["string", "null"]
+          description: JSON representing the pipeline steps
+        diagramJson:
+          type: ["string", "null"]
+          description: JSON representing the visual flow diagram nodes/edges
+        createdAt:
+          type: string
+          format: date-time
+
+    # Codebase
+    CodebaseProjectInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        files:
+          type: ["string", "null"]
+          description: JSON string of file paths and contents
+
+    CodebaseProject:
+      type: object
+      required: [id, name, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: "pending | indexed | error"
+        fileCount:
+          type: ["integer", "null"]
+        files:
+          type: ["string", "null"]
+          description: JSON of indexed file contents
+        createdAt:
+          type: string
+          format: date-time
+
+    CodebaseQueryInput:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+
+    CodebaseQueryResult:
+      type: object
+      required: [id, projectId, question, answer, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        question:
+          type: string
+        answer:
+          type: string
+        sources:
+          type: ["string", "null"]
+          description: JSON array of source references (file, line)
+        createdAt:
+          type: string
+          format: date-time
+
+    # Analyzer
+    IncidentInput:
+      type: object
+      required: [logInput]
+      properties:
+        logInput:
+          type: string
+          description: Error logs, stack traces, or system metrics to analyze
+
+    Incident:
+      type: object
+      required: [id, logInput, status, createdAt]
+      properties:
+        id:
+          type: integer
+        logInput:
+          type: string
+        status:
+          type: string
+          description: "pending | complete | error"
+        rootCause:
+          type: ["string", "null"]
+        affectedComponent:
+          type: ["string", "null"]
+        confidence:
+          type: ["number", "null"]
+          description: 0-1 confidence score
+        remediation:
+          type: ["string", "null"]
+          description: Step-by-step fix instructions
+        severity:
+          type: ["string", "null"]
+          description: "critical | high | medium | low"
+        createdAt:
+          type: string
+          format: date-time
+
+    # Dashboard
+    DashboardStats:
+      type: object
+      required: [totalScans, totalWorkflows, totalProjects, totalIncidents, recentScans, avgSeverityScore]
+      properties:
+        totalScans:
+          type: integer
+        totalWorkflows:
+          type: integer
+        totalProjects:
+          type: integer
+        totalIncidents:
+          type: integer
+        recentScans:
+          type: integer
+          description: Scans in the last 7 days
+        avgSeverityScore:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, module, title, status, createdAt]
+      properties:
+        id:
+          type: integer
+        module:
+          type: string
+          description: "security | workflow | codebase | analyzer"
+        title:
+          type: string
+        status:
+          type: string
+        severity:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time

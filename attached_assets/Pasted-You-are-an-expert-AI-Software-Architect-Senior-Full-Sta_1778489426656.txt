@@ -1,0 +1,288 @@
+You are an expert AI Software Architect, Senior Full-Stack Engineer, and AI Agent Developer.
+Build me a complete, production-ready, startup-level AI SaaS platform called "DevMind AI" — 
+a unified developer intelligence suite with 4 AI-powered modules.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧩 THE 4 MODULES TO BUILD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MODULE 1 — AI Security Scanner
+- User pastes code or uploads a file
+- AI agent analyzes it for vulnerabilities (SQLi, XSS, secrets, insecure deps, OWASP Top 10)
+- Returns: severity score, affected line numbers, explanation of risk, suggested fix with corrected code
+- Uses RAG to reference known CVE patterns from a local vector store
+
+MODULE 2 — AI Workflow Builder
+- User describes an automation in plain English (e.g. "When a GitHub PR is merged, post a Slack message and update a Notion page")
+- AI converts it into an executable pipeline JSON with steps, conditions, API call specs
+- Shows a live visual flow diagram of the pipeline
+- Optional: execute the pipeline using mock API calls with real-time step logs
+
+MODULE 3 — Codebase Knowledge AI
+- User uploads a ZIP of their repo or pastes a GitHub URL
+- AI indexes all files, extracts structure (functions, classes, relationships)
+- User can ask questions: "Where is payment logic?", "What does processOrder() do?", "How does auth flow?"
+- AI answers with file path, line reference, and explanation using RAG over the indexed codebase
+
+MODULE 4 — AI Root Cause Analyzer
+- User pastes error logs, stack traces, or system metrics
+- AI identifies the probable root cause using pattern matching
+- Suggests fixes based on past similar incidents (RAG over an incidents knowledge base)
+- Returns: root cause summary, confidence score, affected component, step-by-step remediation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏗️ ARCHITECTURE & TECH STACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FRONTEND:
+- Next.js 14 (App Router) + TypeScript
+- Tailwind CSS + shadcn/ui components
+- Zustand for state management
+- React Flow for workflow diagram visualization
+- Monaco Editor (VS Code editor) for code input
+- Streaming UI using Vercel AI SDK (useChat, useCompletion)
+- Framer Motion for animations
+- Deploy on Vercel (free tier)
+
+BACKEND:
+- FastAPI (Python) as the main API server
+- Celery + Redis for async task queue (long AI jobs run in background)
+- LangChain for AI agent orchestration and RAG pipelines
+- LangGraph for multi-step agent workflows with memory
+- Deploy on Railway or Render (free tier)
+
+DATABASE & STORAGE:
+- Supabase (PostgreSQL) for users, projects, scan history, incidents DB
+- Supabase Auth (email + GitHub OAuth)
+- Supabase Storage for file uploads (code files, repos)
+- ChromaDB (local) or Qdrant Cloud free tier for vector storage
+
+AI MODELS (ALL FREE TIER):
+- Google Gemini 1.5 Flash via Google AI Studio API (free, generous limits)
+- text-embedding-004 from Google for embeddings
+- Fallback: Claude 3 Haiku via Anthropic API (optional)
+- Groq API for ultra-fast inference (llama3-70b, free tier)
+
+CACHING & PERFORMANCE:
+- Upstash Redis (serverless, free tier) for caching AI responses
+- Next.js ISR and React Server Components for fast page loads
+
+CI/CD:
+- GitHub Actions for automated testing and deployment
+- Separate repos or monorepo with Turborepo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 FOLDER STRUCTURE TO GENERATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+devmind-ai/
+├── frontend/                    # Next.js app
+│   ├── app/
+│   │   ├── (auth)/             # Login, signup pages
+│   │   ├── dashboard/          # Main dashboard
+│   │   ├── security/           # Module 1 UI
+│   │   ├── workflow/           # Module 2 UI
+│   │   ├── codebase/           # Module 3 UI
+│   │   └── analyzer/           # Module 4 UI
+│   ├── components/
+│   │   ├── ui/                 # shadcn components
+│   │   ├── editor/             # Monaco code editor
+│   │   ├── flow/               # React Flow diagrams
+│   │   └── shared/             # Reusable components
+│   ├── lib/
+│   │   ├── api.ts              # API client
+│   │   └── store.ts            # Zustand store
+│   └── types/
+│
+├── backend/                     # FastAPI app
+│   ├── main.py                 # Entry point
+│   ├── routers/
+│   │   ├── security.py         # Module 1 endpoints
+│   │   ├── workflow.py         # Module 2 endpoints
+│   │   ├── codebase.py         # Module 3 endpoints
+│   │   └── analyzer.py         # Module 4 endpoints
+│   ├── agents/
+│   │   ├── security_agent.py   # LangGraph security agent
+│   │   ├── workflow_agent.py   # Workflow generation agent
+│   │   ├── codebase_agent.py   # RAG codebase agent
+│   │   └── analyzer_agent.py   # Root cause agent
+│   ├── rag/
+│   │   ├── indexer.py          # Document chunking + embedding
+│   │   ├── retriever.py        # Semantic search
+│   │   └── vector_store.py     # ChromaDB interface
+│   ├── services/
+│   │   ├── llm.py              # LLM client factory
+│   │   ├── embeddings.py       # Embedding service
+│   │   └── cache.py            # Redis cache
+│   ├── models/
+│   │   └── schemas.py          # Pydantic models
+│   └── tasks/
+│       └── celery_tasks.py     # Background jobs
+│
+├── knowledge_base/              # Pre-seeded RAG data
+│   ├── cve_patterns/           # CVE vulnerability patterns
+│   └── incidents/              # Sample incident reports
+│
+└── .github/workflows/           # CI/CD pipelines
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 AI AGENT DESIGN (LangGraph)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Each agent follows this LangGraph state machine pattern:
+
+SecurityAgent:
+  nodes: [parse_code → detect_patterns → rag_lookup_cve → 
+          llm_analyze → generate_fixes → format_report]
+  memory: ConversationBufferMemory (for follow-up questions)
+  tools: [code_parser, vector_search, severity_scorer]
+
+WorkflowAgent:
+  nodes: [parse_intent → identify_services → build_dag → 
+          validate_pipeline → generate_json → create_diagram]
+  tools: [api_schema_lookup, dag_validator]
+
+CodebaseAgent:
+  nodes: [index_repo → chunk_files → embed_chunks → 
+          semantic_search → synthesize_answer]
+  memory: Persistent per project in Supabase
+  tools: [file_reader, ast_parser, vector_search]
+
+AnalyzerAgent:
+  nodes: [parse_logs → extract_patterns → rag_incidents → 
+          score_hypotheses → generate_remediation]
+  tools: [log_parser, vector_search, confidence_scorer]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 UI/UX REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Dark mode by default, light mode toggle
+- Glassmorphism cards with subtle borders
+- Streaming AI responses (typewriter effect using SSE)
+- Module sidebar navigation with icons
+- Each module has: Input panel (left) + AI Output panel (right)
+- Security module: syntax-highlighted code with inline annotations
+- Workflow module: React Flow canvas showing pipeline nodes
+- Codebase module: file tree + chat interface
+- Analyzer module: timeline of steps + confidence meter
+- Global: user dashboard showing history of all scans/analyses
+- Responsive, works on mobile
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 AUTH & SECURITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Supabase Auth with email/password + GitHub OAuth
+- JWT middleware on all FastAPI routes
+- Rate limiting per user (10 free scans/day, Redis counter)
+- Input sanitization and file type validation
+- Environment variables for all secrets (never hardcoded)
+- CORS configured for production domains only
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 DATABASE SCHEMA (Supabase)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+users: id, email, name, plan, created_at
+projects: id, user_id, name, type[security|workflow|codebase|analyzer], created_at
+scans: id, project_id, input_code, result_json, severity_score, created_at
+workflows: id, project_id, description, pipeline_json, diagram_json, created_at
+codebase_indexes: id, project_id, repo_name, file_count, indexed_at
+incidents: id, project_id, log_input, root_cause, remediation, confidence, created_at
+usage_logs: id, user_id, module, tokens_used, created_at
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📡 API ENDPOINTS TO BUILD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+POST /api/security/scan          → analyze code, return vulnerabilities
+POST /api/workflow/generate      → NL description → pipeline JSON + diagram
+POST /api/codebase/index         → upload repo, start indexing job
+POST /api/codebase/query         → ask question about indexed repo
+POST /api/analyzer/diagnose      → paste logs, get root cause + fix
+GET  /api/history/{module}       → fetch user's past results
+GET  /api/health                 → health check
+
+All endpoints:
+- Accept Authorization: Bearer <JWT>
+- Return streaming responses where possible (SSE)
+- Return structured JSON with: result, confidence, sources, tokens_used
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ IMPLEMENTATION ORDER (MVP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PHASE 1 — Foundation (Week 1):
+1. Set up Next.js frontend with auth (Supabase)
+2. Set up FastAPI backend with JWT middleware
+3. Connect Gemini API and test basic LLM calls
+4. Build shared UI layout, sidebar, dashboard skeleton
+
+PHASE 2 — Core Modules (Week 2-3):
+5. Build Security Scanner (module 1) end-to-end
+6. Build Root Cause Analyzer (module 4) end-to-end
+7. Seed ChromaDB with CVE patterns and sample incidents
+8. Add streaming responses and history saving
+
+PHASE 3 — Advanced Modules (Week 3-4):
+9. Build Codebase Knowledge AI with file upload + RAG
+10. Build Workflow Builder with React Flow diagram
+11. Add Celery background jobs for heavy indexing tasks
+12. Add usage tracking, rate limiting, Redis caching
+
+PHASE 4 — Polish (Week 4-5):
+13. Animations, dark mode, mobile responsive
+14. Error handling, loading states, empty states
+15. Write README, add demo video, deploy
+16. Add sample data so it works on first load
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 DEPLOYMENT INSTRUCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend → Vercel
+  - Connect GitHub repo → auto deploy on push
+  - Add env vars: NEXT_PUBLIC_API_URL, NEXT_PUBLIC_SUPABASE_URL, etc.
+
+Backend → Railway (recommended) or Render
+  - Dockerfile included for containerized deploy
+  - Add env vars: GEMINI_API_KEY, SUPABASE_URL, SUPABASE_KEY, REDIS_URL
+  - ChromaDB runs as persistent volume on Railway
+
+Database → Supabase (free tier)
+  - Run migrations from /backend/migrations/
+  - Enable Row Level Security on all tables
+
+Vector DB → Qdrant Cloud free tier (1GB free)
+  - Or ChromaDB on Railway persistent volume
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 CODE QUALITY STANDARDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- TypeScript strict mode on frontend
+- Pydantic v2 for all request/response schemas
+- Every function has JSDoc / docstring
+- Error boundaries on all React components
+- try/catch on every API call with user-friendly error messages
+- Loading skeletons for all async data
+- Console.log removed in production (use proper logger)
+- All API keys in .env.local (never committed)
+- .env.example file with all required variables listed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 START WITH THIS EXACT SEQUENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Scaffold the full project structure above
+2. Create frontend/backend with working auth (login, signup, protected routes)
+3. Build Module 1 (Security Scanner) fully working with Gemini API
+4. Show me the complete file for each step before moving to next
+5. After each module works, commit with a descriptive message
+6. At the end, generate: README.md, .env.example, Dockerfile, and 
+   a sample_demo_inputs.json with test data for all 4 modules
+
+Make every component production-quality. Add comments explaining 
+non-obvious logic. The project will be shown to recruiters at 
+top tech companies — it must look and work like a real SaaS product.
