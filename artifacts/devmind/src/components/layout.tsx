@@ -6,7 +6,6 @@ import {
   BookOpen,
   AlertTriangle,
   LayoutDashboard,
-  Brain,
   Moon,
   Sun,
 } from "lucide-react";
@@ -42,9 +41,11 @@ function Sidebar() {
   return (
     <aside className="w-60 flex-shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0">
       <div className="flex items-center gap-2.5 px-5 h-14 border-b border-sidebar-border">
-        <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-          <Brain className="h-4 w-4 text-primary-foreground" />
-        </div>
+        <img
+          src="/devmind-logo.png"
+          alt="DevMind AI"
+          className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+        />
         <span className="font-semibold text-sm tracking-tight">DevMind AI</span>
       </div>
 

@@ -74,11 +74,18 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Overview of your AI-powered developer intelligence platform.
-        </p>
+      <div className="mb-6 flex items-center gap-4">
+        <img
+          src="/devmind-logo.png"
+          alt="DevMind AI"
+          className="w-14 h-14 rounded-2xl object-cover shadow-lg shadow-primary/20 flex-shrink-0"
+        />
+        <div>
+          <h1 className="text-2xl font-bold">DevMind AI</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            Overview of your AI-powered developer intelligence platform.
+          </p>
+        </div>
       </div>
 
       {/* Stats */}
