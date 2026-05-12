@@ -459,42 +459,213 @@ If no codebase content is provided, still answer as best you can and return an e
 
 // ─── ROOT CAUSE ANALYZER ─────────────────────────────────────────────────────
 
-export interface IncidentAnalysis {
-  rootCause: string;
-  affectedComponent: string;
-  confidence: number;
-  remediation: string;
-  severity: "critical" | "high" | "medium" | "low";
+export interface FailureTimelineEvent {
+  timestamp: string;
+  service: string;
+  event: string;
+  type: "trigger" | "failure" | "cascade" | "recovery" | "alert";
 }
 
-export async function analyzeIncident(logInput: string): Promise<IncidentAnalysis> {
-  const systemPrompt = `You are a senior site reliability engineer specializing in incident diagnosis.
-Analyze error logs, stack traces, and system metrics to identify root causes.
+export interface DependencyNode {
+  name: string;
+  type: "frontend" | "api" | "service" | "database" | "cache" | "queue" | "infra" | "external";
+  status: "healthy" | "degraded" | "failed";
+}
 
-Return ONLY valid JSON with this exact structure:
+export interface RemediationPlan {
+  immediate: string[];
+  workaround: string[];
+  longTerm: string[];
+  rollback: string[];
+  validation: string[];
+}
+
+export interface DebuggingPlaybook {
+  commands: string[];
+  logsToInspect: string[];
+  metricsToCheck: string[];
+  queries: string[];
+}
+
+export interface EnhancedIncidentAnalysis {
+  incidentTitle: string;
+  severity: "critical" | "high" | "medium" | "low";
+  riskScore: number;
+  confidence: number;
+  executiveSummary: string;
+  rootCause: string;
+  affectedComponent: string;
+  primaryFailure: string;
+  secondaryFailures: string[];
+  failureTimeline: FailureTimelineEvent[];
+  stackTraceAnalysis: string;
+  failingFunction: string;
+  failingModule: string;
+  dependencyChain: DependencyNode[];
+  impactAnalysis: string;
+  userImpact: string;
+  securityImplications: string;
+  remediationPlan: RemediationPlan;
+  debuggingPlaybook: DebuggingPlaybook;
+  preventionStrategy: string[];
+  monitoringRecommendations: string[];
+  aiReasoning: string;
+  postmortem: string;
+  detectedTechnologies: string[];
+  incidentType: string;
+}
+
+export async function analyzeIncident(logInput: string): Promise<EnhancedIncidentAnalysis & {
+  confidence: number; remediation: string; severity: string;
+}> {
+  const systemPrompt = `You are an elite AI Site Reliability Engineer (SRE), DevOps Engineer, and Incident Responder — equivalent to a Datadog, Sentry, and Dynatrace AI combined.
+
+Perform deep semantic analysis of error logs, stack traces, metrics, and system events. Correlate failures across services, identify primary root causes vs cascading symptoms, and generate comprehensive remediation and debugging guidance.
+
+Return ONLY valid JSON matching this EXACT schema:
+
 {
-  "rootCause": "<clear explanation of the root cause>",
-  "affectedComponent": "<the specific service, function, or system component>",
-  "confidence": <0.0-1.0 confidence score>,
-  "remediation": "<numbered steps for remediation, separated by newlines e.g. '1. Check X\\n2. Fix Y\\n3. Deploy Z'>",
-  "severity": "<critical|high|medium|low>"
-}`;
+  "incidentTitle": "<concise incident name e.g. 'Database Connection Pool Exhaustion in PaymentService'>",
+  "severity": "<critical|high|medium|low>",
+  "riskScore": <0.0-10.0>,
+  "confidence": <0-100 integer percentage>,
+  "executiveSummary": "<2-3 sentence non-technical summary of the incident, its cause, and business impact>",
+  "rootCause": "<deep technical explanation of WHY the failure occurred, WHICH code/config caused it, HOW it propagated>",
+  "affectedComponent": "<primary affected service, function, class, or infrastructure component>",
+  "incidentType": "<e.g. 'Database Failure', 'Memory Leak', 'Authentication Failure', 'Network Timeout', 'OOM Crash'>",
+  "primaryFailure": "<the single root cause event that triggered everything else>",
+  "secondaryFailures": [
+    "<cascading failure or symptom 1>",
+    "<cascading failure or symptom 2>"
+  ],
+  "failureTimeline": [
+    {
+      "timestamp": "<relative time or actual timestamp e.g. 'T+0s' or '14:23:01'>",
+      "service": "<service or component name>",
+      "event": "<what happened at this moment>",
+      "type": "<trigger|failure|cascade|recovery|alert>"
+    }
+  ],
+  "stackTraceAnalysis": "<line-by-line reasoning of the stack trace — which frame is the root cause, call chain explanation, thread state if visible>",
+  "failingFunction": "<exact function/method name that failed>",
+  "failingModule": "<file, class, or module where the failure originated>",
+  "dependencyChain": [
+    {
+      "name": "<service or component name>",
+      "type": "<frontend|api|service|database|cache|queue|infra|external>",
+      "status": "<healthy|degraded|failed>"
+    }
+  ],
+  "impactAnalysis": "<technical description of what systems are affected and how severely>",
+  "userImpact": "<description of what end users experienced — errors, slowness, data loss, downtime>",
+  "securityImplications": "<any security risks introduced or exposed by this failure — or 'None detected' if clean>",
+  "remediationPlan": {
+    "immediate": ["<step 1>", "<step 2>"],
+    "workaround": ["<step 1>", "<step 2>"],
+    "longTerm": ["<step 1>", "<step 2>"],
+    "rollback": ["<step 1>", "<step 2>"],
+    "validation": ["<step 1>", "<step 2>"]
+  },
+  "debuggingPlaybook": {
+    "commands": ["<e.g. kubectl logs pod-name>", "<e.g. docker inspect container>"],
+    "logsToInspect": ["<log file or source>"],
+    "metricsToCheck": ["<metric name and what threshold to look for>"],
+    "queries": ["<e.g. SELECT * FROM pg_stat_activity WHERE state = 'active'>"]
+  },
+  "preventionStrategy": [
+    "<prevention measure 1>",
+    "<prevention measure 2>"
+  ],
+  "monitoringRecommendations": [
+    "<e.g. Alert when connection pool utilization > 80% for 5 minutes>",
+    "<e.g. Set SLO: API p99 latency < 500ms>"
+  ],
+  "aiReasoning": "<3-4 paragraph explanation of HOW the AI reached this conclusion — what log patterns were correlated, what the failure chain analysis revealed, why this is the root cause vs noise>",
+  "postmortem": "<structured postmortem in this format: 'Timeline: ... | Root Cause: ... | Contributing Factors: ... | Actions Taken: ... | Lessons Learned: ...' — each section on a new line>",
+  "detectedTechnologies": ["<e.g. Java', 'HikariCP', 'PostgreSQL', 'Spring Boot'>"]
+}
+
+Rules:
+- Always differentiate primary root cause from secondary cascading failures
+- Timeline must be chronological and include at least 3 events
+- Dependency chain shows the flow from healthy to failed components
+- Generate realistic debugging commands for the detected technology stack
+- If logs are unclear, still reason about the most likely cause from available evidence`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
-    max_tokens: 4096,
+    max_tokens: 8192,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
-      { role: "user", content: `Analyze these logs/traces:\n\n${logInput}` },
+      { role: "user", content: `Perform deep root cause analysis on these logs/traces:\n\n${logInput.slice(0, 30000)}` },
     ],
   });
 
   const content = response.choices[0]?.message?.content ?? "{}";
   try {
-    return JSON.parse(content) as IncidentAnalysis;
+    const p = JSON.parse(content) as Partial<EnhancedIncidentAnalysis>;
+    const result: EnhancedIncidentAnalysis = {
+      incidentTitle: p.incidentTitle ?? "Unknown Incident",
+      severity: p.severity ?? "medium",
+      riskScore: p.riskScore ?? 5,
+      confidence: p.confidence ?? 70,
+      executiveSummary: p.executiveSummary ?? "",
+      rootCause: p.rootCause ?? "",
+      affectedComponent: p.affectedComponent ?? "Unknown",
+      incidentType: p.incidentType ?? "Unknown",
+      primaryFailure: p.primaryFailure ?? "",
+      secondaryFailures: Array.isArray(p.secondaryFailures) ? p.secondaryFailures : [],
+      failureTimeline: Array.isArray(p.failureTimeline) ? p.failureTimeline : [],
+      stackTraceAnalysis: p.stackTraceAnalysis ?? "",
+      failingFunction: p.failingFunction ?? "",
+      failingModule: p.failingModule ?? "",
+      dependencyChain: Array.isArray(p.dependencyChain) ? p.dependencyChain : [],
+      impactAnalysis: p.impactAnalysis ?? "",
+      userImpact: p.userImpact ?? "",
+      securityImplications: p.securityImplications ?? "None detected",
+      remediationPlan: p.remediationPlan ?? { immediate: [], workaround: [], longTerm: [], rollback: [], validation: [] },
+      debuggingPlaybook: p.debuggingPlaybook ?? { commands: [], logsToInspect: [], metricsToCheck: [], queries: [] },
+      preventionStrategy: Array.isArray(p.preventionStrategy) ? p.preventionStrategy : [],
+      monitoringRecommendations: Array.isArray(p.monitoringRecommendations) ? p.monitoringRecommendations : [],
+      aiReasoning: p.aiReasoning ?? "",
+      postmortem: p.postmortem ?? "",
+      detectedTechnologies: Array.isArray(p.detectedTechnologies) ? p.detectedTechnologies : [],
+    };
+    return {
+      ...result,
+      confidence: result.confidence / 100,
+      remediation: result.remediationPlan.immediate.join("\n"),
+    };
   } catch {
-    return { rootCause: content, affectedComponent: "Unknown", confidence: 0.5, remediation: "", severity: "medium" };
+    return {
+      incidentTitle: "Analysis Failed",
+      severity: "medium",
+      riskScore: 5,
+      confidence: 0.5,
+      executiveSummary: content,
+      rootCause: content,
+      affectedComponent: "Unknown",
+      incidentType: "Unknown",
+      primaryFailure: "",
+      secondaryFailures: [],
+      failureTimeline: [],
+      stackTraceAnalysis: "",
+      failingFunction: "",
+      failingModule: "",
+      dependencyChain: [],
+      impactAnalysis: "",
+      userImpact: "",
+      securityImplications: "",
+      remediationPlan: { immediate: [], workaround: [], longTerm: [], rollback: [], validation: [] },
+      debuggingPlaybook: { commands: [], logsToInspect: [], metricsToCheck: [], queries: [] },
+      preventionStrategy: [],
+      monitoringRecommendations: [],
+      aiReasoning: "",
+      postmortem: "",
+      detectedTechnologies: [],
+      remediation: "",
+    };
   }
 }
 

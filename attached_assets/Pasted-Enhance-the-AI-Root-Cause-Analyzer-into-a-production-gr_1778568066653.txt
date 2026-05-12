@@ -1,0 +1,436 @@
+Enhance the AI Root Cause Analyzer into a production-grade AI-powered incident investigation and debugging platform that performs deep contextual reasoning, failure correlation, dependency tracing, remediation planning, and intelligent debugging instead of only summarizing logs.
+
+The Root Cause Analyzer should behave like an AI Site Reliability Engineer (SRE), DevOps Engineer, Security Analyst, and Software Architect combined.
+
+The system must:
+- Understand stack traces
+- Analyze logs contextually
+- Trace failure propagation
+- Detect primary vs secondary failures
+- Correlate multi-service issues
+- Explain WHY the issue occurred
+- Explain HOW the failure propagated
+- Suggest precise remediation steps
+- Generate debugging guidance
+- Identify security implications
+- Recommend preventive measures
+- Simulate likely failure chains
+
+The platform should resemble enterprise-grade observability and debugging tools such as:
+- Datadog
+- New Relic
+- Dynatrace
+- Splunk
+- Elastic Observability
+- Sentry
+- Grafana
+- PagerDuty Incident Intelligence
+
+====================================================
+CORE AI ANALYSIS REQUIREMENTS
+====================================================
+
+The analyzer must:
+- Understand application logs semantically
+- Analyze stack traces deeply
+- Detect runtime failures
+- Identify infrastructure failures
+- Detect cascading failures
+- Correlate distributed system events
+- Understand code execution flow
+- Prioritize root causes intelligently
+- Avoid shallow regex-only detection
+
+The system should support:
+- Java
+- Python
+- Node.js
+- JavaScript
+- Go
+- C/C++
+- PHP
+- Rust
+- Kubernetes logs
+- Docker logs
+- Nginx logs
+- Apache logs
+- AWS/GCP/Azure logs
+- CI/CD pipeline failures
+- Database logs
+- API gateway logs
+
+====================================================
+DETAILED INCIDENT ANALYSIS OUTPUT
+====================================================
+
+For every incident or failure detected, generate ALL of the following:
+
+1. INCIDENT TITLE
+Generate a concise incident name.
+
+Examples:
+- Null Pointer Exception in UserService
+- Database Connection Pool Exhaustion
+- Redis Cache Timeout Failure
+- Kubernetes Pod CrashLoopBackOff
+- API Authentication Failure
+- Out of Memory JVM Crash
+
+2. INCIDENT SEVERITY
+Provide:
+- Critical
+- High
+- Medium
+- Low
+- Informational
+
+Also generate:
+- Incident Risk Score out of 10
+
+Example:
+Severity: Critical
+Risk Score: 9.6/10
+
+3. CONFIDENCE SCORE
+Generate:
+Confidence: 97%
+
+The confidence should depend on:
+- Log clarity
+- Stack trace quality
+- Correlation certainty
+- Failure propagation analysis
+- Historical pattern matching
+
+4. ROOT CAUSE ANALYSIS
+Generate a highly detailed explanation:
+- WHAT failed
+- WHY it failed
+- WHICH component caused it
+- WHICH dependency triggered it
+- WHETHER it is primary or secondary failure
+- HOW the failure propagated
+
+Example:
+“The UserService attempted to access a null object reference because the authentication microservice returned an incomplete payload after a Redis cache timeout. This propagated through the API layer and caused repeated request failures.”
+
+5. PRIMARY vs SECONDARY FAILURE DETECTION
+The AI must differentiate:
+- root cause
+- symptoms
+- downstream failures
+- unrelated warnings
+
+Example:
+PRIMARY:
+Redis connection timeout
+
+SECONDARY:
+NullPointerException due to missing cached data
+
+6. FAILURE PROPAGATION TIMELINE
+Generate an investigation timeline.
+
+Example:
+10:00:01 → Redis timeout
+10:00:02 → Auth service failure
+10:00:03 → NullPointerException
+10:00:04 → API returned HTTP 500
+
+Visualize cascading failures.
+
+7. STACK TRACE INTELLIGENCE
+Analyze:
+- exact failure line
+- call hierarchy
+- function chain
+- recursive loops
+- thread crashes
+- memory failures
+
+Highlight:
+- vulnerable function
+- failing module
+- probable source file
+
+8. SERVICE DEPENDENCY ANALYSIS
+Explain:
+- which services interacted
+- which dependency failed
+- upstream/downstream impact
+- API communication breakdown
+- network dependency failures
+
+Example:
+Frontend
+   ↓
+API Gateway
+   ↓
+Auth Service
+   ↓
+Redis Timeout
+   ↓
+Authentication Failure
+
+9. INCIDENT IMPACT ANALYSIS
+Explain:
+- user impact
+- service degradation
+- downtime risk
+- data corruption possibility
+- performance degradation
+- security implications
+- financial/business impact
+
+10. REMEDIATION STEPS
+Generate:
+- immediate fix
+- temporary workaround
+- long-term architectural fix
+- rollback steps
+- validation steps
+- monitoring recommendations
+
+Example:
+1. Restart Redis cluster
+2. Increase timeout threshold
+3. Add retry logic
+4. Add circuit breaker
+5. Implement cache fallback
+
+11. DEBUGGING PLAYBOOK
+Generate:
+- exact debugging commands
+- logs to inspect
+- metrics to check
+- Kubernetes commands
+- Docker inspection steps
+- DB verification queries
+
+Example:
+kubectl logs pod-name
+docker inspect container
+top
+netstat -tulpn
+
+12. PREVENTION STRATEGY
+Generate:
+- monitoring recommendations
+- alerting rules
+- retry mechanisms
+- circuit breakers
+- input validation
+- failover strategy
+- autoscaling recommendations
+- rate limiting
+
+====================================================
+ADVANCED AI ANALYSIS FEATURES
+====================================================
+
+13. AI FAILURE REASONING PANEL
+Add:
+“Why the AI concluded this is the root cause”
+
+Explain:
+- correlated logs
+- stack trace reasoning
+- dependency failures
+- sequence analysis
+- runtime evidence
+
+14. MULTI-SERVICE CORRELATION
+Correlate:
+- frontend logs
+- backend logs
+- database logs
+- infrastructure logs
+- cloud monitoring events
+- CI/CD failures
+
+15. PERFORMANCE BOTTLENECK DETECTION
+Detect:
+- slow DB queries
+- thread starvation
+- memory leaks
+- CPU spikes
+- deadlocks
+- infinite loops
+- queue congestion
+
+16. SECURITY INCIDENT DETECTION
+Detect:
+- suspicious payloads
+- brute force attempts
+- injection attempts
+- SSRF attempts
+- authentication abuse
+- API abuse
+- privilege escalation attempts
+
+17. CLOUD & INFRASTRUCTURE ANALYSIS
+Understand:
+- Kubernetes
+- Docker
+- AWS Lambda
+- ECS/EKS
+- EC2
+- load balancers
+- API gateways
+- serverless failures
+
+18. DATABASE FAILURE ANALYSIS
+Detect:
+- connection exhaustion
+- deadlocks
+- replication lag
+- transaction rollback failures
+- query timeout
+- migration failures
+
+19. NETWORK FAILURE ANALYSIS
+Detect:
+- DNS failures
+- SSL/TLS issues
+- timeout chains
+- packet loss
+- gateway failures
+- API handshake failures
+
+====================================================
+VISUAL & UI ENHANCEMENTS
+====================================================
+
+20. INVESTIGATION DASHBOARD
+Add:
+- incident severity indicators
+- confidence meters
+- failure heatmaps
+- service dependency graph
+- execution timeline
+- cascading failure visualization
+- expandable stack traces
+- incident impact graph
+
+21. TIMELINE VISUALIZATION
+Display:
+- chronological failure chain
+- service interactions
+- retry attempts
+- crash propagation
+- recovery attempts
+
+22. ROOT CAUSE GRAPH
+Generate:
+Service A
+   ↓
+DB Timeout
+   ↓
+Cache Failure
+   ↓
+NullPointerException
+   ↓
+API 500 Errors
+
+23. EXPANDABLE INCIDENT PANELS
+Each panel should contain:
+- summary
+- logs
+- stack traces
+- root cause
+- remediation
+- AI reasoning
+- prevention strategy
+
+24. INCIDENT SIMULATION MODE
+Simulate:
+- failure replay
+- retry scenarios
+- cascading failure propagation
+- recovery flow
+
+====================================================
+ENTERPRISE FEATURES
+====================================================
+
+25. INCIDENT PRIORITIZATION
+Automatically prioritize:
+- critical outages
+- customer-facing failures
+- data corruption risks
+- security incidents
+
+26. EXECUTIVE INCIDENT SUMMARY
+Generate:
+- incident overview
+- affected systems
+- estimated impact
+- recommended actions
+- business severity
+
+27. POSTMORTEM GENERATION
+Automatically generate:
+- incident timeline
+- root cause summary
+- contributing factors
+- remediation actions
+- lessons learned
+
+28. ALERT & MONITORING RECOMMENDATIONS
+Suggest:
+- Prometheus alerts
+- Grafana dashboards
+- Datadog monitors
+- CloudWatch alarms
+- SLO/SLA thresholds
+
+====================================================
+AI-POWERED ENHANCEMENTS
+====================================================
+
+29. SMART REMEDIATION PRIORITIZATION
+The AI should:
+- prioritize safest fixes
+- identify quickest recovery actions
+- suggest rollback plans
+- identify risky remediation steps
+
+30. FALSE POSITIVE REDUCTION
+The AI should:
+- distinguish warnings from failures
+- identify unrelated logs
+- correlate actual runtime failures
+- avoid noisy alerts
+
+31. SELF-HEALING RECOMMENDATIONS
+Suggest:
+- auto-restart policies
+- retry queues
+- autoscaling
+- circuit breakers
+- health checks
+
+====================================================
+FINAL OUTPUT FORMAT
+====================================================
+
+Every incident analysis must include:
+
+- Incident Title
+- Severity Score
+- Confidence Score
+- Root Cause
+- Primary vs Secondary Failures
+- Failure Timeline
+- Stack Trace Analysis
+- Dependency Graph
+- Impact Analysis
+- Remediation Steps
+- Debugging Playbook
+- Prevention Strategy
+- AI Reasoning
+- Security Implications
+- Monitoring Recommendations
+- Postmortem Summary
+
+The final experience should feel like an intelligent AI incident response engineer deeply investigated the entire system failure instead of simply summarizing logs.

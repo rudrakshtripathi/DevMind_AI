@@ -37,7 +37,6 @@ router.post("/analyzer/incidents", async (req, res): Promise<void> => {
 
   res.status(201).json(GetIncidentResponse.parse(incident));
 
-  // Run AI analysis in background
   (async () => {
     try {
       const result = await analyzeIncident(parsed.data.logInput);
@@ -48,8 +47,9 @@ router.post("/analyzer/incidents", async (req, res): Promise<void> => {
           rootCause: result.rootCause,
           affectedComponent: result.affectedComponent,
           confidence: result.confidence,
-          remediation: result.remediation,
           severity: result.severity,
+          // Store full enhanced result as JSON in remediation field
+          remediation: JSON.stringify(result),
         })
         .where(eq(incidentsTable.id, incident.id));
     } catch (err) {
