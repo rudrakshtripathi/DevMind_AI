@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "PEXpwIA7fFryZ0jorjjyS"
+uri = "file://DevMind_AI_CyberpunkDesign_Brief.txt"
+type = "text"
+title = "DevMind AI — Cyberpunk UI/UX Design Brief"

@@ -1,0 +1,530 @@
+================================================================================
+   DEVMIND AI — CYBERPUNK UI/UX DESIGN BRIEF
+   Complete Reference for Redesigning the Website with a Cyberpunk Theme
+================================================================================
+
+PROJECT OVERVIEW
+----------------
+Name:        DevMind AI
+Tagline:     Unified Developer Intelligence Platform
+Type:        SaaS Web Application (React + Vite frontend)
+Purpose:     AI-powered suite of tools for developers, SREs, and DevOps engineers.
+             Four core modules powered by GPT-4o for security scanning, workflow
+             automation, codebase intelligence, and incident investigation.
+
+Tech Stack (frontend):
+  - React 18 + TypeScript
+  - Vite (build tool)
+  - TailwindCSS (styling)
+  - Lucide React (icons)
+  - shadcn/ui (component library)
+  - React Query (data fetching)
+  - Wouter (routing)
+
+================================================================================
+SITE STRUCTURE — ALL PAGES
+================================================================================
+
+1. DASHBOARD (route: /)
+   - Main landing page after login
+   - Shows 4 stat cards: Security Scans, Workflows Built, Codebase Projects, Incidents Analyzed
+   - Recent Activity feed: list of all scans/analyses across all modules
+   - Header with DevMind AI logo and tagline
+
+2. SECURITY SCANNER (route: /security)
+   - Input: Code paste area (textarea) for any programming language
+   - Output: Enterprise-grade vulnerability report
+   - Sub-tabs per vulnerability: Overview | Taint Flow | Attack Scenario | Exploit Payload | Code Fix | OWASP
+   - Features:
+     * Security Score ring/dial (0–10)
+     * Severity badges: Critical / High / Medium / Low / Info
+     * Per-vulnerability: CWE ID, OWASP category, attack scenario, exploit payload, code diff
+     * 6 tabs per finding
+   - Sample code buttons for quick demo
+
+3. WORKFLOW BUILDER (route: /workflows)
+   - Input: Natural language workflow description textarea
+   - Output: Structured AI-generated workflow pipeline
+   - 7 tabs on result: Steps | Logic | Data Flow | Resilience | Security | AI Reasoning | Simulate
+   - Features:
+     * Color-coded pipeline diagram showing workflow steps
+     * Step cards with type badges (trigger / action / condition / notification / transform / integration)
+     * Simulate mode to walk through the workflow
+   - Sample workflow buttons
+
+4. CODEBASE AI (route: /codebase)
+   - Input: GitHub repo URL or paste code
+   - Chat-style Q&A interface against an indexed codebase
+   - Features:
+     * Project metadata card (language, framework, file count)
+     * Conversation history with AI responses
+     * Source citations / references in answers
+     * Code snippet display
+
+5. ROOT CAUSE ANALYZER (route: /analyzer)
+   - Input: Error logs, stack traces, Kubernetes events, system metrics (textarea)
+   - Output: Full AI SRE investigation report
+   - 8 tabs per incident:
+     * Root Cause — deep technical explanation, stack trace analysis, user + technical impact, security implications
+     * Timeline — chronological failure chain (trigger → failure → cascade → recovery → alert events)
+     * Dependencies — service dependency chain showing healthy/degraded/failed nodes
+     * Remediation — 5 categories: Immediate, Workaround, Long-term Fix, Rollback, Validation
+     * Debug Playbook — shell commands, logs to inspect, metrics, DB queries
+     * Prevention — prevention measures + monitoring/alerting recommendations
+     * AI Reasoning — how the AI correlated logs to reach its conclusion
+     * Postmortem — auto-generated structured incident postmortem
+   - Incident header: title, severity badge, incident type, risk score (0–10), confidence meter
+   - Primary vs cascading failures panel
+   - 3 sample incidents pre-loaded
+
+================================================================================
+NAVIGATION / LAYOUT
+================================================================================
+
+Layout type: Left sidebar + main content area
+
+Sidebar:
+  - Logo: "DM" monogram (purple neon, rounded square) + "DevMind AI" text
+  - Nav items with icons:
+      Dashboard       (grid icon)
+      Security Scanner (shield icon)
+      Workflow Builder (workflow/nodes icon)
+      Codebase AI     (book icon)
+      Root Cause Analyzer (alert triangle icon)
+  - Bottom: version number (v1.0.0) + theme toggle button
+
+Main content:
+  - Full-height scrollable area
+  - Max width 5xl (1024px) centered
+  - Page header with icon + title + description
+
+================================================================================
+CURRENT COLOR PALETTE (Dark Theme — to be replaced with cyberpunk)
+================================================================================
+
+Background:       #0f1117  (near-black)
+Card background:  #161b27
+Sidebar:          #0d1117
+Border:           rgba(255,255,255,0.08)
+Primary accent:   #7c3aed  (violet/purple)
+Text primary:     #f0f4f8
+Text muted:       #6b7280
+Severity critical: #ef4444 (red)
+Severity high:    #f97316 (orange)
+Severity medium:  #eab308 (yellow)
+Severity low:     #22c55e (green)
+Success:          #22c55e
+Info:             #3b82f6 (blue)
+
+================================================================================
+CYBERPUNK REDESIGN — DESIGN DIRECTION
+================================================================================
+
+THEME IDENTITY:
+  - Aesthetic references: Cyberpunk 2077, Ghost in the Shell, Blade Runner 2049,
+    Tron Legacy, Mr. Robot, Deus Ex
+  - Feel: Neon-lit, dystopian tech, high-contrast, glitch effects, scanlines,
+    digital decay, hacker terminals, neural networks, neon signs
+  - Mood words: Electric. Dangerous. Intelligent. Rogue. Neural. Augmented.
+
+RECOMMENDED CYBERPUNK COLOR PALETTE:
+
+  Background (base):     #050811  — near-black with deep blue tint
+  Surface / Card:        #0a0f1a  — dark navy card
+  Surface elevated:      #0f1625  — slightly lighter card
+  Sidebar background:    #060c15  — darkest panel
+
+  Primary Neon (cyan):   #00f5ff  — electric cyan / holographic blue
+  Secondary Neon (pink): #ff0080  — hot magenta / fuchsia neon
+  Tertiary (purple):     #7b2fff  — deep violet neon
+  Accent (yellow):       #ffe600  — warning yellow neon
+  Accent (green):        #39ff14  — toxic neon green (matrix green)
+
+  Text primary:          #e0f4ff  — cold white with blue tint
+  Text secondary:        #7ab8d4  — muted cyan
+  Text muted:            #3d5a72  — dark slate
+
+  Border / grid lines:   #1a2a3a  — dark teal-blue border
+  Glow border (active):  #00f5ff33 — translucent cyan glow
+
+  Severity Critical:     #ff0055  — hot red / neon crimson
+  Severity High:         #ff6600  — neon orange
+  Severity Medium:       #ffe600  — electric yellow
+  Severity Low:          #39ff14  — neon green
+  Severity Info:         #00aaff  — digital blue
+
+  Code background:       #040d14  — terminal black
+  Code text:             #00f5ff  — cyan terminal text
+
+TYPOGRAPHY:
+
+  Primary font (headings):   "Orbitron" or "Rajdhani" — angular, futuristic
+  Secondary font (UI text):  "Share Tech Mono" or "JetBrains Mono" — terminal feel
+  Body / descriptions:       "Inter" or "Exo 2" — legible but techy
+  Code blocks:               "JetBrains Mono" or "Fira Code" — monospaced
+
+  Font weights:
+    Headings: 700–900 (bold to black)
+    UI labels: 500–600
+    Body: 400
+    Code: 400
+
+  Letter spacing:
+    Headings: 0.05em to 0.15em (spread out, stencil feel)
+    Labels/caps: 0.1em–0.2em
+    Code: normal
+
+VISUAL EFFECTS:
+
+  1. GLOW / NEON EFFECTS
+     - Neon text glow: text-shadow: 0 0 10px #00f5ff, 0 0 20px #00f5ff88
+     - Neon border glow: box-shadow: 0 0 8px #00f5ff44, inset 0 0 8px #00f5ff11
+     - Buttons: neon outline with glow on hover, pulsing on active state
+
+  2. SCANLINE OVERLAY
+     - Subtle repeating horizontal scanlines at 2–4px gap, 3–8% opacity
+     - Apply as ::before pseudo-element or overlay div on key containers
+
+  3. GLITCH EFFECTS
+     - Title text glitch on hover: CSS clip-path animation shifting text layers
+     - Occasional subtle color channel split (red/blue offset) on headings
+     - Use sparingly — on page titles and section headers only
+
+  4. GRID / HUD LINES
+     - Background dot grid or line grid (like a circuit board)
+     - grid lines at ~30px spacing, 3–5% opacity
+     - On sidebar and hero sections
+
+  5. CORNER BRACKETS
+     - Replace rounded cards with angular cards using CSS clip-path
+     - Or: use corner bracket decorations (top-left and bottom-right corners only)
+     - Corner style: ┌─  ─┐  └─  ─┘  using borders or SVG
+
+  6. ANIMATED ELEMENTS
+     - Blinking cursor on input placeholders
+     - Animated underline/progress on scan/analysis loading states
+     - Pulsing neon ring on active elements
+     - Scrolling hex/binary text in backgrounds (subtle, 2–4% opacity)
+     - Data stream / matrix rain for loading screens
+
+  7. TERMINAL AESTHETIC
+     - Input textareas styled as terminal windows (dark bg, monospace, neon cursor)
+     - Terminal prompt prefix "$ " or ">" on code inputs
+     - Terminal title bars with fake macOS-style dots but in neon colors
+
+================================================================================
+COMPONENT-BY-COMPONENT REDESIGN GUIDE
+================================================================================
+
+SIDEBAR:
+  - Background: #060c15 with vertical circuit-board line pattern
+  - Logo area: neon cyan border-bottom, glowing "DM" logo, flickering neon effect
+  - Nav items: default text in #7ab8d4, active item has left neon border strip (4px cyan)
+    and background: linear-gradient(90deg, #00f5ff0f, transparent)
+  - Active icon: glowing cyan color
+  - Hover: subtle neon overlay
+  - Corner brackets on the sidebar container
+
+CARDS / PANELS:
+  - Background: #0a0f1a
+  - Border: 1px solid #1a2a3a
+  - On hover / active: border color → #00f5ff55, box-shadow glow
+  - Corner clip or corner bracket decorations
+  - Header strip: background gradient or neon left border
+
+BUTTONS:
+  Primary: Background transparent, border 1px neon cyan, text neon cyan
+    - Hover: bg #00f5ff15, outer glow box-shadow
+    - Active/loading: pulsing animation
+  Destructive: neon magenta/red border + text
+  Ghost: subtle text in secondary color
+
+SEVERITY BADGES:
+  Critical: bg #ff005511, border #ff0055, text #ff0055, glow box-shadow
+  High:     bg #ff660011, border #ff6600, text #ff6600
+  Medium:   bg #ffe60011, border #ffe600, text #ffe600
+  Low:      bg #39ff1411, border #39ff14, text #39ff14
+
+TABS (sub-navigation):
+  - Inactive: text #3d5a72, no underline
+  - Active: text #00f5ff, bottom border 2px neon cyan, subtle glow
+  - Tab bar: dark background with faint horizontal line separator
+
+CONFIDENCE METER / PROGRESS BARS:
+  - Track: #0f1625 (dark)
+  - Fill: neon cyan (#00f5ff) with glow: box-shadow 0 0 6px #00f5ff
+  - Percentage text: monospace, cyan
+
+TIMELINE (Failure Timeline component):
+  - Spine line: neon cyan vertical line with glow
+  - Event icons: glowing circle with neon border per type
+  - Event cards: dark with neon left border per event type
+  - Type colors:
+      trigger  → cyan (#00f5ff)
+      failure  → crimson (#ff0055)
+      cascade  → orange (#ff6600)
+      recovery → neon green (#39ff14)
+      alert    → electric yellow (#ffe600)
+
+DEPENDENCY CHAIN:
+  - Node cards: angular/bracket style, icon glowing in node-type color
+  - Connector arrows: neon cyan, animated data-flow pulse on the arrow
+  - Status indicators:
+      healthy  → neon green dot
+      degraded → yellow dot with pulse
+      failed   → red dot with fast pulse
+
+TEXTAREA / INPUT:
+  - Background: #040d14 (terminal black)
+  - Border: 1px solid #1a2a3a
+  - Focus border: 1px solid #00f5ff with glow
+  - Text color: #00f5ff (cyan terminal text) or #e0f4ff
+  - Placeholder: #3d5a72
+  - Font: monospace
+  - Blinking cursor
+
+CODE BLOCKS:
+  - Background: #040d14
+  - Border: 1px solid #1a2a3a
+  - Corner brackets (clip-path or pseudo-elements)
+  - Text: #00f5ff or syntax-highlighted in neon colors
+  - Line numbers: #3d5a72
+
+STAT CARDS (Dashboard):
+  - Angular card with neon border
+  - Large number: Orbitron font, neon cyan, text glow
+  - Label: small caps, muted cyan
+  - Icon: glowing in primary neon
+
+AI REASONING PANEL:
+  - Background: dark purple (#0d0618)
+  - Border: violet neon (#7b2fff)
+  - Header: glowing violet text
+  - Body text: cold white
+
+POSTMORTEM CARD:
+  - Monospace font throughout
+  - Terminal-window styling
+  - Fake terminal prompt at top
+  - Text color: neon green (#39ff14)
+
+LOADING STATES:
+  - Skeleton: replace with animated scanning lines (horizontal neon line scanning top to bottom)
+  - Spinner: neon cyan rotating arc
+  - "Analyzing..." text: typewriter effect with blinking cursor
+  - Loading screen: matrix rain / hex stream overlay
+
+TOAST NOTIFICATIONS:
+  - Dark background with neon left border
+  - Success: neon green
+  - Error: neon crimson
+  - Info: neon cyan
+
+================================================================================
+ICONOGRAPHY
+================================================================================
+
+Current icon set: Lucide React
+Recommended additions / replacements for cyberpunk feel:
+  - Use Circuit, Cpu, Binary, Scan, Fingerprint, Wifi, Radio, Satellite,
+    Crosshair, Eye, Bot, BrainCircuit, Network, Terminal, MonitorSpeaker
+  - Style: stroke icons, neon-colored, 1.5–2px stroke weight
+  - On hover: glow effect using drop-shadow filter
+
+================================================================================
+PAGE-SPECIFIC DESIGN NOTES
+================================================================================
+
+DASHBOARD:
+  - Hero area: large glitching heading "DEVMIND AI" with neon glow
+  - Stat cards with giant neon numbers (Orbitron font)
+  - Activity feed styled as terminal log lines
+  - Background: subtle animated dot/grid pattern
+
+SECURITY SCANNER:
+  - Input area: full terminal window with title bar "SCAN_TARGET.exe"
+  - Security score: circular progress ring in neon, with outer glow, large number center
+  - Vulnerability list: each item is a dark card with neon severity left border
+  - Tab bar: glowing active tab
+  - Exploit payload section: terminal/code block in neon green text
+
+WORKFLOW BUILDER:
+  - Pipeline diagram: neon nodes connected by glowing lines with animated flow dots
+  - Step cards: angular, each step type has a different neon color
+  - "Simulate" tab: animated step-by-step walkthrough with progress glow
+
+ROOT CAUSE ANALYZER:
+  - Failure timeline: vertical neon spine with glowing event nodes
+  - Dependency chain: top-to-bottom graph with neon connectors and status pulsing dots
+  - Debug playbook: terminal window with $ prompts
+  - AI Reasoning panel: purple neural glow
+
+CODEBASE AI:
+  - Chat interface: terminal/IRC style
+  - User messages: right-aligned, neon cyan bubble
+  - AI responses: left-aligned, dark card with violet left border
+  - Code snippets inline: neon green on terminal black
+
+================================================================================
+LOGO & BRANDING
+================================================================================
+
+Current logo: "DM" purple neon monogram on dark rounded square
+File: /devmind-logo.png and /favicon.png
+
+Cyberpunk logo recommendations:
+  - Keep "DM" monogram but render in electric cyan instead of purple
+  - Add neon glow effect / outer halo
+  - Optional: add scan-line texture overlay on the logo
+  - Animated version: subtle flicker / glitch on logo hover
+  - Tagline font: Orbitron or Share Tech Mono
+  - Brand colors: cyan (#00f5ff) primary, magenta (#ff0080) secondary
+
+================================================================================
+ANIMATION GUIDELINES
+================================================================================
+
+Global:
+  - Transition duration: 150–200ms for interactive elements
+  - Easing: ease-out or linear for digital feel
+
+Specific animations:
+  - Page transitions: horizontal scanline wipe
+  - Card appear: fade-in + slight upward translate (20px → 0)
+  - Neon pulse: keyframe animation, opacity oscillates 80%→100%
+  - Glitch: keyframe with translateX(±2px) + color split, 0.3s duration, triggered on hover
+  - Data stream: scrolling hex text, very slow (30–60s loop), 3% opacity background
+  - Scanner line: neon horizontal line scanning vertically during analysis loading
+
+================================================================================
+RESPONSIVE BEHAVIOR
+================================================================================
+
+Desktop (1280px+):  Sidebar always visible, main content fills rest
+Tablet (768–1279px): Sidebar collapses to icon-only strip
+Mobile (<768px):     Sidebar hidden, hamburger menu, drawer navigation
+
+Breakpoints to maintain:
+  - Stat cards: 4 columns → 2 columns → 1 column
+  - Vulnerability tabs: horizontal scroll on small screens
+  - Timeline: stays vertical, full width
+
+================================================================================
+CSS VARIABLES (suggested naming for cyberpunk theme)
+================================================================================
+
+:root {
+  --cp-bg:           #050811;
+  --cp-surface:      #0a0f1a;
+  --cp-surface-hi:   #0f1625;
+  --cp-sidebar:      #060c15;
+
+  --cp-neon-cyan:    #00f5ff;
+  --cp-neon-pink:    #ff0080;
+  --cp-neon-purple:  #7b2fff;
+  --cp-neon-yellow:  #ffe600;
+  --cp-neon-green:   #39ff14;
+
+  --cp-text:         #e0f4ff;
+  --cp-text-muted:   #7ab8d4;
+  --cp-text-dim:     #3d5a72;
+
+  --cp-border:       #1a2a3a;
+  --cp-border-glow:  #00f5ff33;
+
+  --cp-critical:     #ff0055;
+  --cp-high:         #ff6600;
+  --cp-medium:       #ffe600;
+  --cp-low:          #39ff14;
+  --cp-info:         #00aaff;
+}
+
+================================================================================
+FONT IMPORTS (Google Fonts)
+================================================================================
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500&family=Exo+2:wght@300;400;500;600;700&display=swap');
+
+font-family assignments:
+  --font-display:  'Orbitron', sans-serif;        /* headings, titles, numbers */
+  --font-mono:     'JetBrains Mono', monospace;   /* code, terminal, logs */
+  --font-ui:       'Share Tech Mono', monospace;  /* labels, badges, UI text */
+  --font-body:     'Exo 2', sans-serif;           /* body paragraphs */
+
+================================================================================
+UI COPY / TONE GUIDE
+================================================================================
+
+Tone: Technical. Direct. No fluff. Slightly dystopian/hacker voice.
+
+Examples:
+  Current:  "Paste error logs, stack traces..."
+  Cyberpunk: "INJECT SYSTEM LOGS // stack trace input accepted"
+
+  Current:  "Analyze Root Cause"
+  Cyberpunk: "INITIALIZE NEURAL SCAN"
+
+  Current:  "AI is diagnosing the root cause…"
+  Cyberpunk: "NEURAL NET ANALYZING FAILURE SIGNATURE…"
+
+  Current:  "Security Scanner"
+  Cyberpunk: "VULN_SCANNER.EXE"
+
+  Current:  "Workflow Builder"
+  Cyberpunk: "PIPELINE ARCHITECT"
+
+  Current:  "Codebase AI"
+  Cyberpunk: "CODE CORTEX"
+
+  Current:  "Root Cause Analyzer"
+  Cyberpunk: "INCIDENT_TRACE.SYS"
+
+  Current:  "Investigating…"
+  Cyberpunk: "TRACING FAILURE VECTOR…"
+
+================================================================================
+INSPIRATION REFERENCES
+================================================================================
+
+Games / Films:
+  - Cyberpunk 2077 — UI panels, neon overlays, glitch text
+  - Blade Runner 2049 — dark atmosphere, blue/orange neon contrast
+  - Ghost in the Shell — holographic interfaces, translucent panels
+  - Tron Legacy — grid lines, glowing geometry, dark navy palette
+  - Mr. Robot — terminal aesthetic, monospace, dark green/black
+
+Real UI References:
+  - Datadog dark mode — clean dark panels, neon accent data viz
+  - Sentry dark UI — sidebar, card layouts
+  - Linear dark mode — clean nav, subtle borders
+  - Vercel dashboard — minimal, high contrast
+  - htop / btop terminal — grid data with neon bar charts
+
+================================================================================
+DELIVERABLE CHECKLIST FOR UI REDESIGN
+================================================================================
+
+[ ] Update CSS variables / Tailwind config with cyberpunk palette
+[ ] Import and apply cyberpunk fonts (Orbitron, Share Tech Mono, JetBrains Mono, Exo 2)
+[ ] Redesign sidebar: circuit pattern, neon active state, glow logo
+[ ] Redesign dashboard: stat cards with Orbitron numbers, activity feed as terminal log
+[ ] Redesign security scanner: terminal input, neon score ring, vulnerability cards
+[ ] Redesign workflow builder: neon pipeline diagram, animated flow dots
+[ ] Redesign root cause analyzer: neon timeline spine, dependency graph, terminal playbook
+[ ] Redesign codebase AI: IRC/terminal chat, neon code snippets
+[ ] Add scanline overlay (global, subtle)
+[ ] Add grid/dot background pattern
+[ ] Add neon glow utilities to Tailwind
+[ ] Add glitch animation CSS for headings
+[ ] Update all severity badge styles to neon versions
+[ ] Update all button styles to neon outline style
+[ ] Update all card/panel styles to angular cyberpunk style
+[ ] Update loading states to neon scanline animations
+[ ] Update toast notifications to neon style
+[ ] Update icon colors throughout
+[ ] Test responsive layout (mobile/tablet/desktop)
+[ ] Verify accessibility: contrast ratios on neon colors against dark backgrounds
+
+================================================================================
+END OF DESIGN BRIEF
+================================================================================
