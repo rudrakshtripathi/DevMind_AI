@@ -86,24 +86,47 @@ function Navbar({ onLogin }: { onLogin: () => void }) {
 
 // ── Hero ────────────────────────────────────────────────────────
 function HeroVisual() {
+  const [active, setActive] = useState(0);
+
+  // Cycle active card every 0.4 s
+  useEffect(() => {
+    const id = setInterval(() => setActive((a) => (a + 1) % 3), 400);
+    return () => clearInterval(id);
+  }, []);
+
+  const glowFor = (idx: number) =>
+    active === idx
+      ? "border-primary/70 shadow-[0_0_24px_4px_hsl(var(--primary)/0.25)]"
+      : "border-card-border";
+
+  const floatFor = (phase: number) => ({
+    y: [0, -7, 0],
+    transition: {
+      y: { repeat: Infinity, duration: 2.4, ease: "easeInOut", delay: phase },
+    },
+  });
+
   return (
-    <div className="relative w-full max-w-lg mx-auto select-none pointer-events-none">
+    <div className="relative w-full max-w-lg mx-auto select-none pointer-events-none" style={{ height: 380 }}>
       {/* Glow orbs */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-80 h-80 rounded-full bg-primary/20 blur-3xl" />
       </div>
       <div className="absolute top-0 right-8 w-40 h-40 rounded-full bg-purple-500/15 blur-2xl" />
 
-      {/* Back card - Workflow */}
+      {/* Card 0 – Workflow (top-right) */}
       <motion.div
         initial={{ opacity: 0, x: 40, rotate: 3 }}
-        animate={{ opacity: 1, x: 0, rotate: 3 }}
+        animate={{ opacity: 1, x: 0, rotate: 3, ...floatFor(0.8) }}
         transition={{ delay: 0.6, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute top-8 right-0 w-56 bg-card border border-card-border rounded-xl p-4 shadow-xl"
+        className={cn(
+          "absolute top-8 right-0 w-56 bg-card rounded-xl p-4 shadow-xl border transition-[border-color,box-shadow] duration-300",
+          glowFor(0),
+        )}
       >
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-md bg-purple-500/20 flex items-center justify-center">
-            <Workflow className="h-3 w-3 text-purple-400" />
+          <div className={cn("w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-300", active === 0 ? "bg-purple-500/40" : "bg-purple-500/20")}>
+            <Workflow className={cn("h-3 w-3 transition-colors duration-300", active === 0 ? "text-purple-300" : "text-purple-400")} />
           </div>
           <span className="text-xs font-medium">Workflow Generated</span>
         </div>
@@ -117,16 +140,20 @@ function HeroVisual() {
         </div>
       </motion.div>
 
-      {/* Main card - Security */}
+      {/* Card 1 – Security Analysis (center) */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
+        animate={{ opacity: 1, y: 0, ...floatFor(0) }}
         transition={{ delay: 0.4, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 bg-card border border-card-border rounded-2xl p-5 shadow-2xl mx-6 mt-20"
+        className={cn(
+          "absolute z-10 bg-card rounded-2xl p-5 shadow-2xl border transition-[border-color,box-shadow] duration-300",
+          "left-6 right-6 top-20",
+          glowFor(1),
+        )}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
+            <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-colors duration-300", active === 1 ? "bg-primary/40" : "bg-primary/20")}>
               <Shield className="h-4 w-4 text-primary" />
             </div>
             <span className="text-sm font-semibold">Security Analysis</span>
@@ -135,22 +162,18 @@ function HeroVisual() {
             Complete
           </span>
         </div>
-
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
-            0 Critical vulnerabilities
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
-            1 High — SQL injection risk
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-yellow-400 flex-shrink-0" />
-            2 Medium — Input validation
-          </div>
+          {[
+            { color: "bg-red-400", label: "0 Critical vulnerabilities" },
+            { color: "bg-orange-400", label: "1 High — SQL injection risk" },
+            { color: "bg-yellow-400", label: "2 Medium — Input validation" },
+          ].map(({ color, label }) => (
+            <div key={label} className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className={cn("w-2 h-2 rounded-full flex-shrink-0", color)} />
+              {label}
+            </div>
+          ))}
         </div>
-
         <div className="border-t border-border pt-3">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-muted-foreground">Severity Score</span>
@@ -167,16 +190,19 @@ function HeroVisual() {
         </div>
       </motion.div>
 
-      {/* Bottom-left card - Codebase */}
+      {/* Card 2 – Codebase Q&A (bottom-left) */}
       <motion.div
         initial={{ opacity: 0, x: -30, rotate: -2 }}
-        animate={{ opacity: 1, x: 0, rotate: -2 }}
+        animate={{ opacity: 1, x: 0, rotate: -2, ...floatFor(1.6) }}
         transition={{ delay: 0.75, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute bottom-0 left-0 w-52 bg-card border border-card-border rounded-xl p-3.5 shadow-xl"
+        className={cn(
+          "absolute bottom-0 left-0 w-52 bg-card rounded-xl p-3.5 shadow-xl border transition-[border-color,box-shadow] duration-300",
+          glowFor(2),
+        )}
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-5 h-5 rounded-md bg-blue-500/20 flex items-center justify-center">
-            <BookOpen className="h-3 w-3 text-blue-400" />
+          <div className={cn("w-5 h-5 rounded-md flex items-center justify-center transition-colors duration-300", active === 2 ? "bg-blue-500/40" : "bg-blue-500/20")}>
+            <BookOpen className={cn("h-3 w-3 transition-colors duration-300", active === 2 ? "text-blue-300" : "text-blue-400")} />
           </div>
           <span className="text-xs font-medium">Codebase Q&A</span>
         </div>
