@@ -1,0 +1,24 @@
+I want two things done to this app: (1) a high-quality, feature-rich SaaS-style landing page for logged-out users, and (2) Google login with per-user data storage. Keep the existing app/dashboard exactly as it is for logged-in users — don't change its functionality, only gate it behind login.
+1. Landing Page (for logged-out users)
+Build a modern, premium-feeling SaaS landing page as the homepage when a user is not logged in. Include ALL of the following sections:
+
+Sticky navbar: logo/name on the left, links to sections (Features, How it Works, FAQ), and a "Log in with Google" button on the right. Navbar should become slightly more opaque/blurred on scroll.
+Hero section: a clear, benefit-driven headline explaining what DevMind AI does, a short supporting subheadline, a prominent "Get Started" / "Log in with Google" CTA button, and a visual element (product screenshot mockup, abstract gradient graphic, or animated illustration — whichever fits best).
+Social proof strip: a row of "Trusted by" logos or a simple stat line (e.g. "Used by X developers", "X responses generated") — use placeholder text if real numbers aren't available yet.
+Features section: highlight the app's core capabilities (infer these from the actual app's functionality) in a grid of cards, each with an icon, short title, and 1-2 line description.
+How it works section: 3-4 numbered steps explaining the user flow, visually connected (line/arrow between steps).
+Stats/metrics section: 3-4 impressive numbers relevant to the app (e.g. speed, accuracy, response time, users) with large bold typography.
+Testimonials section: 2-3 short placeholder testimonial cards with name, role, and a quote — clearly marked as placeholder content I can edit later.
+FAQ section: 4-6 collapsible accordion-style questions addressing common concerns (what is this, is it free, how does login work, data privacy, etc).
+Final CTA section: a bold closing section right before the footer, reiterating the value prop with another "Get Started" button.
+Footer: logo, short tagline, links (About, Contact, GitHub if relevant, Privacy, Terms), and social icons if applicable.
+
+Design requirements:
+
+Clean, modern typography (good font pairing, clear hierarchy).
+Cohesive color palette with a signature accent color; support both light and dark mode if feasible.
+Generous whitespace, no cramped sections.
+Subtle scroll-triggered fade-in/slide-up animations on each section.
+Hover micro-interactions on buttons, cards, and nav links.
+Should feel like a premium product — comparable to Linear, Vercel, or Notion's marketing site, not a generic template.
+Fully responsive across mobile, tablet, and desktop.
