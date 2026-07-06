@@ -690,7 +690,7 @@ function Footer() {
 
         <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">© 2026 DevMind AI. All rights reserved.</p>
-          <p className="text-xs text-muted-foreground">Built with ❤️ for developers</p>
+          <p className="text-muted-foreground text-[12px] text-center">Built with ❤️ for developers by Rudraksh Tripathi</p>
         </div>
       </div>
     </footer>
