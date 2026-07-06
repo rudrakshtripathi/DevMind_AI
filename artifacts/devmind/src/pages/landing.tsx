@@ -298,31 +298,77 @@ function Hero({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-// ── Social proof ─────────────────────────────────────────────────
-function SocialProof() {
-  const badges = [
-    "React", "Python", "TypeScript", "Go", "Rust", "Java", "Ruby", "C++",
-  ];
+// ── Social proof — infinite marquee ──────────────────────────────
+const row1Langs = [
+  { name: "React",      dot: "bg-blue-400" },
+  { name: "Python",     dot: "bg-yellow-400" },
+  { name: "TypeScript", dot: "bg-blue-500" },
+  { name: "Go",         dot: "bg-cyan-400" },
+  { name: "Rust",       dot: "bg-orange-500" },
+  { name: "Java",       dot: "bg-red-500" },
+  { name: "Node.js",    dot: "bg-green-500" },
+  { name: "C#",         dot: "bg-purple-500" },
+];
+const row2Langs = [
+  { name: "Ruby",       dot: "bg-red-400" },
+  { name: "C++",        dot: "bg-indigo-400" },
+  { name: "PHP",        dot: "bg-violet-400" },
+  { name: "Kotlin",     dot: "bg-purple-400" },
+  { name: "Swift",      dot: "bg-orange-400" },
+  { name: "Scala",      dot: "bg-red-600" },
+  { name: "Elixir",     dot: "bg-purple-600" },
+  { name: "Dart",       dot: "bg-cyan-500" },
+];
+
+function LangBadge({ name, dot }: { name: string; dot: string }) {
   return (
-    <section className="border-y border-border bg-muted/30 py-10 px-6 overflow-hidden">
-      <FadeUp className="max-w-6xl mx-auto">
-        <p className="text-center text-sm text-muted-foreground mb-6 font-medium tracking-wide uppercase">
-          Supports every major language & stack
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          {badges.map((b) => (
-            <span
-              key={b}
-              className="px-4 py-1.5 rounded-full border border-border bg-card text-sm text-muted-foreground font-medium hover:border-primary/50 hover:text-foreground transition-colors"
-            >
-              {b}
-            </span>
-          ))}
-          <span className="px-4 py-1.5 rounded-full border border-border bg-card text-sm text-muted-foreground font-medium">
-            + more
-          </span>
+    <span
+      className={cn(
+        "inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card",
+        "text-sm text-muted-foreground font-medium mx-2 flex-shrink-0 whitespace-nowrap",
+        "hover:border-primary/50 hover:text-foreground hover:scale-105",
+        "transition-all duration-200 cursor-default select-none",
+      )}
+    >
+      <span className={cn("w-2 h-2 rounded-full flex-shrink-0", dot)} />
+      {name}
+    </span>
+  );
+}
+
+function SocialProof() {
+  return (
+    <section className="border-y border-border bg-muted/30 py-12 overflow-hidden [--play:running] hover:[--play:paused]">
+      <style>{`
+        @keyframes devmind-marquee-left  { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+        @keyframes devmind-marquee-right { from { transform: translateX(-50%) } to { transform: translateX(0) } }
+        .dm-scroll-left  { animation: devmind-marquee-left  32s linear infinite; animation-play-state: var(--play, running); }
+        .dm-scroll-right { animation: devmind-marquee-right 28s linear infinite; animation-play-state: var(--play, running); }
+      `}</style>
+
+      <p className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-8 px-6">
+        Supports every major language &amp; stack
+      </p>
+
+      <div className="space-y-3">
+        {/* Row 1 – scrolls left */}
+        <div className="flex overflow-hidden mask-fade-x">
+          <div className="flex dm-scroll-left">
+            {[...row1Langs, ...row1Langs].map((l, i) => (
+              <LangBadge key={i} {...l} />
+            ))}
+          </div>
         </div>
-      </FadeUp>
+
+        {/* Row 2 – scrolls right */}
+        <div className="flex overflow-hidden mask-fade-x">
+          <div className="flex dm-scroll-right">
+            {[...row2Langs, ...row2Langs].map((l, i) => (
+              <LangBadge key={i} {...l} />
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
