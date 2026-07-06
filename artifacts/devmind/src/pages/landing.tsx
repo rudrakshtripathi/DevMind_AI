@@ -105,147 +105,202 @@ function HeroVisual({
   }, []);
 
   // Parallax layers — different depths
-  const p0x = useTransform(mouseX, (x) => x * 0.038);
-  const p0y = useTransform(mouseY, (y) => y * 0.028);
-  const p1x = useTransform(mouseX, (x) => x * 0.018);
-  const p1y = useTransform(mouseY, (y) => y * 0.014);
-  const p2x = useTransform(mouseX, (x) => x * -0.028);
-  const p2y = useTransform(mouseY, (y) => y * -0.02);
+  const p0x = useTransform(mouseX, (x) => x * 0.03);
+  const p0y = useTransform(mouseY, (y) => y * 0.022);
+  const p1x = useTransform(mouseX, (x) => x * 0.013);
+  const p1y = useTransform(mouseY, (y) => y * 0.01);
+  const p2x = useTransform(mouseX, (x) => x * -0.022);
+  const p2y = useTransform(mouseY, (y) => y * -0.016);
   const orbX = useTransform(mouseX, (x) => x * 0.055);
   const orbY = useTransform(mouseY, (y) => y * 0.055);
 
   const glowFor = (idx: number) =>
     active === idx
-      ? "border-primary/70 shadow-[0_0_24px_4px_hsl(var(--primary)/0.25)]"
-      : "border-card-border";
+      ? "border-primary/60 shadow-[0_0_32px_6px_hsl(var(--primary)/0.22)]"
+      : "border-white/[0.08]";
 
   const floatFor = (phase: number) => ({
-    y: [0, -7, 0],
-    transition: { y: { repeat: Infinity, duration: 2.4, ease: "easeInOut", delay: phase } },
+    y: [0, -9, 0],
+    transition: { y: { repeat: Infinity, duration: 2.8, ease: "easeInOut", delay: phase } },
   });
 
   return (
-    <div className="relative w-full max-w-lg mx-auto select-none pointer-events-none" style={{ height: 380 }}>
-      {/* Glow orbs — follow mouse */}
-      <motion.div
-        style={{ x: orbX, y: orbY }}
-        className="absolute inset-0 flex items-center justify-center"
-      >
-        <div className="w-80 h-80 rounded-full bg-primary/20 blur-3xl" />
-      </motion.div>
-      <div className="absolute top-0 right-8 w-40 h-40 rounded-full bg-purple-500/15 blur-2xl" />
+    <>
+      <style>{`
+        @keyframes hero-live { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.8)} }
+        @keyframes hero-shimmer { 0%{transform:translateX(-150%) skewX(-15deg)} 100%{transform:translateX(250%) skewX(-15deg)} }
+        @keyframes hero-scan { 0%{top:0%;opacity:0} 4%{opacity:0.9} 96%{opacity:0.6} 100%{top:100%;opacity:0} }
+        @keyframes hero-ring { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.2);opacity:0} }
+        .hero-live-dot  { animation: hero-live 1.8s ease-in-out infinite; }
+        .hero-shimmer   { animation: hero-shimmer 2.6s ease-in-out infinite 1.2s; }
+        .hero-scan-line { animation: hero-scan 5s linear infinite; }
+        .hero-ring      { animation: hero-ring 2s ease-out infinite; }
+      `}</style>
+      <div className="relative w-full max-w-lg mx-auto select-none pointer-events-none" style={{ height: 400 }}>
 
-      {/* Card 0 – Workflow (top-right) — far layer */}
-      <motion.div
-        style={{ x: p0x, y: p0y }}
-        initial={{ opacity: 0, x: 40, rotate: 3 }}
-        animate={{ opacity: 1, rotate: 3, ...floatFor(0.8) }}
-        transition={{ delay: 0.6, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className={cn(
-          "absolute top-8 right-0 w-56 bg-card rounded-xl p-4 shadow-xl border transition-[border-color,box-shadow] duration-300",
-          glowFor(0),
-        )}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <div className={cn("w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-300", active === 0 ? "bg-purple-500/40" : "bg-purple-500/20")}>
-            <Workflow className={cn("h-3 w-3 transition-colors duration-300", active === 0 ? "text-purple-300" : "text-purple-400")} />
-          </div>
-          <span className="text-xs font-medium">Workflow Generated</span>
-        </div>
-        <div className="space-y-1.5">
-          {["Trigger: GitHub Push", "Build & Test", "Security Scan", "Deploy to Prod"].map((s, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <CheckCircle2 className="h-3 w-3 text-green-400 flex-shrink-0" />
-              <span className="text-xs text-muted-foreground">{s}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+        {/* Ambient glow behind cards — follows mouse */}
+        <motion.div style={{ x: orbX, y: orbY }} className="absolute inset-0 flex items-center justify-center">
+          <div className="w-72 h-72 rounded-full bg-primary/18 blur-[70px]" />
+        </motion.div>
+        <div className="absolute top-0 right-4 w-36 h-36 rounded-full bg-purple-500/12 blur-[50px]" />
 
-      {/* Card 1 – Security Analysis (center) — mid layer */}
-      <motion.div
-        style={{ x: p1x, y: p1y }}
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, ...floatFor(0) }}
-        transition={{ delay: 0.4, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className={cn(
-          "absolute z-10 bg-card rounded-2xl p-5 shadow-2xl border transition-[border-color,box-shadow] duration-300",
-          "left-6 right-6 top-20",
-          glowFor(1),
-        )}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-colors duration-300", active === 1 ? "bg-primary/40" : "bg-primary/20")}>
-              <Shield className="h-4 w-4 text-primary" />
+        {/* Card 0 – Workflow (top-right) */}
+        <motion.div
+          style={{ x: p0x, y: p0y }}
+          initial={{ opacity: 0, x: 40, rotate: 3 }}
+          animate={{ opacity: 1, rotate: 3, ...floatFor(0.9) }}
+          transition={{ delay: 0.6, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className={cn(
+            "absolute top-6 right-0 w-58 rounded-xl p-4 shadow-2xl border backdrop-blur-xl transition-[border-color,box-shadow] duration-400",
+            "bg-card/80",
+            glowFor(0),
+          )}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className={cn("w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-300", active === 0 ? "bg-purple-500/40" : "bg-purple-500/20")}>
+                <Workflow className={cn("h-3 w-3 transition-colors duration-300", active === 0 ? "text-purple-300" : "text-purple-400")} />
+              </div>
+              <span className="text-xs font-semibold tracking-tight">Workflow Generated</span>
             </div>
-            <span className="text-sm font-semibold">Security Analysis</span>
-          </div>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/25 font-medium">
-            Complete
-          </span>
-        </div>
-        <div className="space-y-2 mb-4">
-          {[
-            { color: "bg-red-400", label: "0 Critical vulnerabilities" },
-            { color: "bg-orange-400", label: "1 High — SQL injection risk" },
-            { color: "bg-yellow-400", label: "2 Medium — Input validation" },
-          ].map(({ color, label }) => (
-            <div key={label} className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className={cn("w-2 h-2 rounded-full flex-shrink-0", color)} />
-              {label}
+            <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
+              <span className="hero-live-dot w-1.5 h-1.5 rounded-full bg-green-400 block" />
+              <span className="text-[9px] text-green-400 font-bold uppercase tracking-widest">Live</span>
             </div>
-          ))}
-        </div>
-        <div className="border-t border-border pt-3">
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-muted-foreground">Severity Score</span>
-            <span className="font-semibold text-orange-400">4.1 / 10</span>
           </div>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-400"
-              initial={{ width: 0 }}
-              animate={{ width: "41%" }}
-              transition={{ delay: 0.9, duration: 0.8, ease: "easeOut" }}
-            />
+          <div className="space-y-1.5">
+            {["Trigger: GitHub Push", "Build & Test", "Security Scan", "Deploy to Prod"].map((s, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <CheckCircle2 className={cn("h-3 w-3 flex-shrink-0 transition-colors duration-300", active === 0 ? "text-green-300" : "text-green-400/70")} />
+                <span className="text-xs text-muted-foreground">{s}</span>
+              </div>
+            ))}
           </div>
-        </div>
-      </motion.div>
+          {/* bottom metadata */}
+          <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground/60 font-mono">github-actions.yml</span>
+            <span className="text-[10px] text-green-400/80">↑ pushed 2m ago</span>
+          </div>
+        </motion.div>
 
-      {/* Card 2 – Codebase Q&A (bottom-left) — near layer, counter-moves */}
-      <motion.div
-        style={{ x: p2x, y: p2y }}
-        initial={{ opacity: 0, x: -30, rotate: -2 }}
-        animate={{ opacity: 1, rotate: -2, ...floatFor(1.6) }}
-        transition={{ delay: 0.75, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className={cn(
-          "absolute bottom-0 left-0 w-52 bg-card rounded-xl p-3.5 shadow-xl border transition-[border-color,box-shadow] duration-300",
-          glowFor(2),
-        )}
-      >
-        <div className="flex items-center gap-2 mb-2">
-          <div className={cn("w-5 h-5 rounded-md flex items-center justify-center transition-colors duration-300", active === 2 ? "bg-blue-500/40" : "bg-blue-500/20")}>
-            <BookOpen className={cn("h-3 w-3 transition-colors duration-300", active === 2 ? "text-blue-300" : "text-blue-400")} />
+        {/* Card 1 – Security Analysis (center) */}
+        <motion.div
+          style={{ x: p1x, y: p1y }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, ...floatFor(0) }}
+          transition={{ delay: 0.4, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className={cn(
+            "absolute z-10 rounded-2xl p-5 shadow-2xl border backdrop-blur-xl overflow-hidden transition-[border-color,box-shadow] duration-400",
+            "left-3 right-3 top-[72px] bg-card/85",
+            glowFor(1),
+          )}
+        >
+          {/* Animated scan line when active */}
+          {active === 1 && (
+            <div className="hero-scan-line absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent pointer-events-none z-20" />
+          )}
+
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300 relative", active === 1 ? "bg-primary/35" : "bg-primary/15")}>
+                <Shield className="h-4 w-4 text-primary" />
+                {active === 1 && (
+                  <div className="hero-ring absolute inset-0 rounded-lg border border-primary/50" />
+                )}
+              </div>
+              <div>
+                <span className="text-sm font-bold block leading-none mb-0.5">Security Analysis</span>
+                <span className="text-[10px] text-muted-foreground font-mono">src/middlewares/auth.ts</span>
+              </div>
+            </div>
+            <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/12 text-green-400 border border-green-500/20 font-semibold tracking-wide">
+              ✓ Complete
+            </span>
           </div>
-          <span className="text-xs font-medium">Codebase Q&A</span>
-        </div>
-        <p className="text-xs text-muted-foreground italic">"Where is auth middleware defined?"</p>
-        <p className="text-xs text-primary mt-1.5">Found in src/middlewares/auth.ts — handles session validation and OIDC token refresh.</p>
-      </motion.div>
-    </div>
+
+          <div className="space-y-2 mb-4">
+            {[
+              { color: "bg-red-400", label: "0 Critical vulnerabilities", dot: "text-red-400" },
+              { color: "bg-orange-400", label: "1 High — SQL injection risk", dot: "text-orange-400" },
+              { color: "bg-yellow-400", label: "2 Medium — Input validation", dot: "text-yellow-400" },
+            ].map(({ color, label }) => (
+              <div key={label} className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className={cn("w-2 h-2 rounded-full flex-shrink-0 shadow-sm", color)} />
+                {label}
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-white/[0.07] pt-3">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-muted-foreground">Severity Score</span>
+              <span className="font-bold text-orange-400 tabular-nums">4.1 / 10</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted/60 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 relative overflow-hidden"
+                initial={{ width: 0 }}
+                animate={{ width: "41%" }}
+                transition={{ delay: 0.9, duration: 1, ease: "easeOut" }}
+              >
+                <div className="hero-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Card 2 – Codebase Q&A (bottom-left) */}
+        <motion.div
+          style={{ x: p2x, y: p2y }}
+          initial={{ opacity: 0, x: -30, rotate: -2 }}
+          animate={{ opacity: 1, rotate: -2, ...floatFor(1.7) }}
+          transition={{ delay: 0.75, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className={cn(
+            "absolute bottom-2 left-0 w-56 rounded-xl p-3.5 shadow-2xl border backdrop-blur-xl transition-[border-color,box-shadow] duration-400",
+            "bg-card/80",
+            glowFor(2),
+          )}
+        >
+          <div className="flex items-center gap-2 mb-2.5">
+            <div className={cn("w-5 h-5 rounded-md flex items-center justify-center transition-colors duration-300", active === 2 ? "bg-blue-500/40" : "bg-blue-500/18")}>
+              <BookOpen className={cn("h-3 w-3 transition-colors duration-300", active === 2 ? "text-blue-300" : "text-blue-400")} />
+            </div>
+            <span className="text-xs font-semibold">Codebase Q&amp;A</span>
+          </div>
+          <div className="bg-muted/40 rounded-lg p-2 mb-2.5 border border-white/[0.05]">
+            <p className="text-[11px] text-muted-foreground italic leading-relaxed">"Where is auth middleware defined?"</p>
+          </div>
+          <div className="flex items-start gap-1.5">
+            <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5 border border-primary/20">
+              <Zap className="h-2.5 w-2.5 text-primary" />
+            </div>
+            <p className="text-[11px] text-primary leading-relaxed">
+              <span className="font-mono text-[10px] bg-primary/10 px-1 py-0.5 rounded border border-primary/15">src/middlewares/auth.ts</span>
+              {" "}— session validation &amp; OIDC.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </>
   );
 }
 
 function Hero({ onLogin }: { onLogin: () => void }) {
   const heroRef = useRef<HTMLElement>(null);
+  const btnRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
-  // Mouse tracking
+  // Mouse tracking for spotlight + parallax
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
-  const mouseX = useSpring(rawX, { damping: 28, stiffness: 120, mass: 0.8 });
-  const mouseY = useSpring(rawY, { damping: 28, stiffness: 120, mass: 0.8 });
+  const mouseX = useSpring(rawX, { damping: 28, stiffness: 110, mass: 0.9 });
+  const mouseY = useSpring(rawY, { damping: 28, stiffness: 110, mass: 0.9 });
+
+  // Magnetic button springs
+  const btnRawX = useMotionValue(0);
+  const btnRawY = useMotionValue(0);
+  const btnX = useSpring(btnRawX, { damping: 16, stiffness: 240 });
+  const btnY = useSpring(btnRawY, { damping: 16, stiffness: 240 });
 
   useEffect(() => {
     if (reduced) return;
@@ -255,16 +310,36 @@ function Hero({ onLogin }: { onLogin: () => void }) {
       const r = el.getBoundingClientRect();
       rawX.set(e.clientX - r.left - r.width / 2);
       rawY.set(e.clientY - r.top - r.height / 2);
+      // Magnetic button pull
+      const btn = btnRef.current;
+      if (btn) {
+        const br = btn.getBoundingClientRect();
+        const dx = e.clientX - (br.left + br.width / 2);
+        const dy = e.clientY - (br.top + br.height / 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 110) {
+          const strength = (1 - dist / 110) * 0.35;
+          btnRawX.set(dx * strength);
+          btnRawY.set(dy * strength);
+        } else {
+          btnRawX.set(0);
+          btnRawY.set(0);
+        }
+      }
     };
     el.addEventListener("mousemove", onMove);
     return () => el.removeEventListener("mousemove", onMove);
   }, [reduced]);
 
-  // Spotlight position
-  const spotX = useTransform(mouseX, (x) => `calc(50% + ${x * 0.6}px)`);
-  const spotY = useTransform(mouseY, (y) => `calc(40% + ${y * 0.6}px)`);
+  // 3-D tilt on the visual
+  const tiltX = useTransform(mouseY, (y) => y * -0.014);
+  const tiltY = useTransform(mouseX, (x) => x * 0.009);
 
-  // Cycling headline word
+  // Spotlight
+  const spotX = useTransform(mouseX, (x) => `calc(50% + ${x * 0.52}px)`);
+  const spotY = useTransform(mouseY, (y) => `calc(42% + ${y * 0.52}px)`);
+
+  // Cycling word
   const [wordIdx, setWordIdx] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setWordIdx((i) => (i + 1) % CYCLING_WORDS.length), 2600);
@@ -276,65 +351,85 @@ function Hero({ onLogin }: { onLogin: () => void }) {
       ref={heroRef}
       className="relative min-h-screen flex flex-col justify-center pt-24 pb-20 px-6 overflow-hidden"
     >
-      {/* Dot-grid texture */}
+      {/* Fine dot-grid */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.15]"
+        className="absolute inset-0 pointer-events-none opacity-[0.11]"
         style={{
           backgroundImage: "radial-gradient(circle, hsl(var(--muted-foreground)) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
+          backgroundSize: "26px 26px",
         }}
       />
 
-      {/* Static base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/6 via-transparent to-purple-500/6 pointer-events-none" />
+      {/* Animated aurora orbs */}
+      <motion.div
+        animate={{ x: [0, 55, -25, 0], y: [0, -35, 28, 0], scale: [1, 1.18, 0.94, 1] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute pointer-events-none w-[580px] h-[580px] rounded-full bg-primary/12 blur-[110px]"
+        style={{ top: "0%", left: "8%" }}
+      />
+      <motion.div
+        animate={{ x: [0, -45, 35, 0], y: [0, 45, -25, 0], scale: [1, 0.88, 1.12, 1] }}
+        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+        className="absolute pointer-events-none w-[420px] h-[420px] rounded-full bg-purple-500/10 blur-[90px]"
+        style={{ top: "-5%", right: "2%" }}
+      />
+      <motion.div
+        animate={{ x: [0, 38, -55, 0], y: [0, -28, 45, 0], scale: [1, 1.22, 0.88, 1] }}
+        transition={{ duration: 28, repeat: Infinity, ease: "easeInOut", delay: 9 }}
+        className="absolute pointer-events-none w-[280px] h-[280px] rounded-full bg-cyan-500/7 blur-[65px]"
+        style={{ bottom: "8%", right: "22%" }}
+      />
 
       {/* Mouse-following spotlight */}
       {!reduced && (
         <motion.div
-          className="absolute pointer-events-none w-[700px] h-[700px] rounded-full"
+          className="absolute pointer-events-none rounded-full"
           style={{
+            width: 860,
+            height: 860,
             left: spotX,
             top: spotY,
             translateX: "-50%",
             translateY: "-50%",
-            background:
-              "radial-gradient(circle, hsl(var(--primary)/0.12) 0%, hsl(var(--primary)/0.04) 40%, transparent 70%)",
+            background: "radial-gradient(circle, hsl(var(--primary)/0.09) 0%, hsl(var(--primary)/0.03) 38%, transparent 62%)",
           }}
         />
       )}
 
-      {/* Vignette fade at edges */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,transparent_60%,hsl(var(--background)/0.8)_100%)]" />
+      {/* Edge vignette */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_72%_52%_at_50%_50%,transparent_52%,hsl(var(--background)/0.88)_100%)]" />
 
       <div className="relative max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-16 items-center">
+        {/* ── Left col ── */}
         <div>
+          {/* Pill badge */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-semibold mb-7 backdrop-blur-sm"
           >
-            <Zap className="h-3 w-3" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             AI-powered developer intelligence
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
+            transition={{ delay: 0.18, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            className="text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-6"
           >
             Ship safer code,{" "}
-            {/* Cycling animated word */}
-            <span className="inline-block relative" style={{ minWidth: "3.5ch" }}>
+            <span className="inline-block">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={CYCLING_WORDS[wordIdx]}
-                  initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
+                  initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: -14, filter: "blur(4px)" }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent"
+                  exit={{ opacity: 0, y: -18, filter: "blur(8px)" }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent"
                 >
                   {CYCLING_WORDS[wordIdx]}
                 </motion.span>
@@ -342,52 +437,78 @@ function Hero({ onLogin }: { onLogin: () => void }) {
             </span>
           </motion.h1>
 
+          {/* Subtext */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg"
+            transition={{ delay: 0.28, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-md"
           >
-            DevMind AI is your unified developer intelligence platform — instant security scanning,
-            AI workflow automation, codebase Q&A, and root cause analysis, all in one place.
+            Your unified developer intelligence platform — instant security scanning, AI workflow
+            automation, codebase Q&amp;A, and root cause analysis, all in one place.
           </motion.p>
 
+          {/* CTA row */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex items-center gap-4 flex-wrap"
+            transition={{ delay: 0.38, duration: 0.5 }}
+            className="flex items-center gap-4 flex-wrap mb-8"
           >
-            <Button onClick={onLogin} size="lg" className="gap-2 px-6 font-semibold text-base h-12">
-              Get Started Free
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-muted-foreground">No credit card required</span>
+            {/* Magnetic button wrapper */}
+            <motion.div ref={btnRef} style={{ x: btnX, y: btnY }}>
+              <Button
+                onClick={onLogin}
+                size="lg"
+                className="gap-2 px-7 font-semibold text-base h-12 relative overflow-hidden group shadow-lg shadow-primary/25"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Get Started Free
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </span>
+                {/* Sweep shimmer on hover */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"
+                />
+              </Button>
+            </motion.div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                <CheckCircle2 className="h-2.5 w-2.5 text-green-400" />
+              </span>
+              <span className="text-sm text-muted-foreground">No credit card required</span>
+            </div>
           </motion.div>
 
+          {/* Trust badges */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center gap-5 mt-8"
+            transition={{ delay: 0.55 }}
+            className="flex items-center gap-6"
           >
             {[
               { icon: Lock, label: "SOC-2 Ready" },
               { icon: Globe, label: "10+ Languages" },
               { icon: Zap, label: "<1s Response" },
             ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Icon className="h-3.5 w-3.5 text-primary" />
+              <div
+                key={label}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground group cursor-default hover:text-foreground transition-colors duration-200"
+              >
+                <Icon className="h-3.5 w-3.5 text-primary/60 group-hover:text-primary transition-colors duration-200" />
                 {label}
               </div>
             ))}
           </motion.div>
         </div>
 
+        {/* ── Right col — 3-D tilting visual ── */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.93 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ delay: 0.28, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+          style={reduced ? {} : { rotateX: tiltX, rotateY: tiltY, transformPerspective: 1100 }}
         >
           <HeroVisual mouseX={mouseX} mouseY={mouseY} />
         </motion.div>
