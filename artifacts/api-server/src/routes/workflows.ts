@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, workflowsTable } from "@workspace/db";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import {
   CreateWorkflowBody,
   GetWorkflowParams,
@@ -12,15 +12,24 @@ import { logger } from "../lib/logger.js";
 
 const router: IRouter = Router();
 
-router.get("/workflows", async (_req, res): Promise<void> => {
+router.get("/workflows", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const workflows = await db
     .select()
     .from(workflowsTable)
+    .where(eq(workflowsTable.userId, req.user.id))
     .orderBy(desc(workflowsTable.createdAt));
   res.json(ListWorkflowsResponse.parse(workflows));
 });
 
 router.post("/workflows", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const parsed = CreateWorkflowBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -30,6 +39,7 @@ router.post("/workflows", async (req, res): Promise<void> => {
   const [workflow] = await db
     .insert(workflowsTable)
     .values({
+      userId: req.user.id,
       description: parsed.data.description,
       status: "pending",
     })
@@ -37,18 +47,14 @@ router.post("/workflows", async (req, res): Promise<void> => {
 
   res.status(201).json(GetWorkflowResponse.parse(workflow));
 
-  // Run AI generation in background
   (async () => {
     try {
       const result = await generateWorkflow(parsed.data.description);
-
       await db
         .update(workflowsTable)
         .set({
           status: "complete",
-          // Store the entire enhanced workflow in pipelineJson
           pipelineJson: JSON.stringify(result),
-          // Also keep a separate diagram blob for legacy compat
           diagramJson: JSON.stringify(result.diagram),
         })
         .where(eq(workflowsTable.id, workflow.id));
@@ -63,6 +69,10 @@ router.post("/workflows", async (req, res): Promise<void> => {
 });
 
 router.get("/workflows/:id", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const params = GetWorkflowParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -72,7 +82,12 @@ router.get("/workflows/:id", async (req, res): Promise<void> => {
   const [workflow] = await db
     .select()
     .from(workflowsTable)
-    .where(eq(workflowsTable.id, params.data.id));
+    .where(
+      and(
+        eq(workflowsTable.id, params.data.id),
+        eq(workflowsTable.userId, req.user.id)
+      )
+    );
 
   if (!workflow) {
     res.status(404).json({ error: "Workflow not found" });

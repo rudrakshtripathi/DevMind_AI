@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const codebaseProjectsTable = pgTable("codebase_projects", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   name: text("name").notNull(),
   description: text("description"),
   status: text("status").notNull().default("pending"),

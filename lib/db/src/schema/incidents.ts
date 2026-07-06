@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const incidentsTable = pgTable("incidents", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   logInput: text("log_input").notNull(),
   status: text("status").notNull().default("pending"),
   rootCause: text("root_cause"),

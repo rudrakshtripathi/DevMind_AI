@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, securityScansTable, workflowsTable, codebaseProjectsTable, incidentsTable } from "@workspace/db";
-import { desc, count, avg, gte, sql } from "drizzle-orm";
+import { desc, count, avg, gte, sql, eq } from "drizzle-orm";
 import {
   GetDashboardStatsResponse,
   GetRecentActivityResponse,
@@ -8,30 +8,41 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/dashboard/stats", async (_req, res): Promise<void> => {
+router.get("/dashboard/stats", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const userId = req.user.id;
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const [secStats] = await db
     .select({ total: count(), avg: avg(securityScansTable.severityScore) })
-    .from(securityScansTable);
+    .from(securityScansTable)
+    .where(eq(securityScansTable.userId, userId));
 
   const [wfStats] = await db
     .select({ total: count() })
-    .from(workflowsTable);
+    .from(workflowsTable)
+    .where(eq(workflowsTable.userId, userId));
 
   const [cbStats] = await db
     .select({ total: count() })
-    .from(codebaseProjectsTable);
+    .from(codebaseProjectsTable)
+    .where(eq(codebaseProjectsTable.userId, userId));
 
   const [inStats] = await db
     .select({ total: count() })
-    .from(incidentsTable);
+    .from(incidentsTable)
+    .where(eq(incidentsTable.userId, userId));
 
   const [recentStats] = await db
     .select({ recent: count() })
     .from(securityScansTable)
-    .where(gte(securityScansTable.createdAt, sevenDaysAgo));
+    .where(
+      sql`${securityScansTable.userId} = ${userId} AND ${securityScansTable.createdAt} >= ${sevenDaysAgo}`
+    );
 
   res.json(
     GetDashboardStatsResponse.parse({
@@ -45,7 +56,13 @@ router.get("/dashboard/stats", async (_req, res): Promise<void> => {
   );
 });
 
-router.get("/dashboard/recent", async (_req, res): Promise<void> => {
+router.get("/dashboard/recent", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const userId = req.user.id;
+
   const recentScans = await db
     .select({
       id: securityScansTable.id,
@@ -55,6 +72,7 @@ router.get("/dashboard/recent", async (_req, res): Promise<void> => {
       createdAt: securityScansTable.createdAt,
     })
     .from(securityScansTable)
+    .where(eq(securityScansTable.userId, userId))
     .orderBy(desc(securityScansTable.createdAt))
     .limit(5);
 
@@ -67,6 +85,7 @@ router.get("/dashboard/recent", async (_req, res): Promise<void> => {
       createdAt: workflowsTable.createdAt,
     })
     .from(workflowsTable)
+    .where(eq(workflowsTable.userId, userId))
     .orderBy(desc(workflowsTable.createdAt))
     .limit(5);
 
@@ -79,6 +98,7 @@ router.get("/dashboard/recent", async (_req, res): Promise<void> => {
       createdAt: incidentsTable.createdAt,
     })
     .from(incidentsTable)
+    .where(eq(incidentsTable.userId, userId))
     .orderBy(desc(incidentsTable.createdAt))
     .limit(5);
 

@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const securityScansTable = pgTable("security_scans", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   code: text("code").notNull(),
   language: text("language").notNull(),
   filename: text("filename"),

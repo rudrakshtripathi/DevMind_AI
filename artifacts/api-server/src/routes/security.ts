@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, securityScansTable } from "@workspace/db";
-import { desc, eq, avg, count, sql } from "drizzle-orm";
+import { desc, eq, avg, count, sql, and, isNull, or } from "drizzle-orm";
 import {
   CreateSecurityScanBody,
   GetSecurityScanParams,
@@ -13,15 +13,24 @@ import { logger } from "../lib/logger.js";
 
 const router: IRouter = Router();
 
-router.get("/security/scans", async (_req, res): Promise<void> => {
+router.get("/security/scans", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const scans = await db
     .select()
     .from(securityScansTable)
+    .where(eq(securityScansTable.userId, req.user.id))
     .orderBy(desc(securityScansTable.createdAt));
   res.json(ListSecurityScansResponse.parse(scans));
 });
 
 router.post("/security/scans", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const parsed = CreateSecurityScanBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -31,6 +40,7 @@ router.post("/security/scans", async (req, res): Promise<void> => {
   const [scan] = await db
     .insert(securityScansTable)
     .values({
+      userId: req.user.id,
       code: parsed.data.code,
       language: parsed.data.language,
       filename: parsed.data.filename ?? null,
@@ -40,7 +50,6 @@ router.post("/security/scans", async (req, res): Promise<void> => {
 
   res.status(201).json(GetSecurityScanResponse.parse(scan));
 
-  // Run AI analysis in background
   (async () => {
     try {
       const result = await analyzeCodeSecurity(
@@ -53,7 +62,6 @@ router.post("/security/scans", async (req, res): Promise<void> => {
         .set({
           status: "complete",
           severityScore: result.severityScore,
-          // Store full enhanced result in vulnerabilities field
           vulnerabilities: JSON.stringify(result),
           summary: result.summary,
         })
@@ -69,6 +77,10 @@ router.post("/security/scans", async (req, res): Promise<void> => {
 });
 
 router.get("/security/scans/:id", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const params = GetSecurityScanParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -78,7 +90,12 @@ router.get("/security/scans/:id", async (req, res): Promise<void> => {
   const [scan] = await db
     .select()
     .from(securityScansTable)
-    .where(eq(securityScansTable.id, params.data.id));
+    .where(
+      and(
+        eq(securityScansTable.id, params.data.id),
+        eq(securityScansTable.userId, req.user.id)
+      )
+    );
 
   if (!scan) {
     res.status(404).json({ error: "Scan not found" });
@@ -88,7 +105,11 @@ router.get("/security/scans/:id", async (req, res): Promise<void> => {
   res.json(GetSecurityScanResponse.parse(scan));
 });
 
-router.get("/security/stats", async (_req, res): Promise<void> => {
+router.get("/security/stats", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const [stats] = await db
     .select({
       totalScans: count(),
@@ -98,7 +119,8 @@ router.get("/security/stats", async (_req, res): Promise<void> => {
       mediumCount: sql<number>`count(*) filter (where vulnerabilities::text like '%"severity":"medium"%')`,
       lowCount: sql<number>`count(*) filter (where vulnerabilities::text like '%"severity":"low"%')`,
     })
-    .from(securityScansTable);
+    .from(securityScansTable)
+    .where(eq(securityScansTable.userId, req.user.id));
 
   res.json(
     GetSecurityStatsResponse.parse({
