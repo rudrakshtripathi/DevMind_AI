@@ -41,7 +41,7 @@ function ThemeToggle() {
 
 function Sidebar() {
   const [location] = useLocation();
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, login, logout } = useAuth();
 
   return (
     <aside className="w-60 flex-shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0">
@@ -54,26 +54,30 @@ function Sidebar() {
         <span className="font-semibold text-sm tracking-tight">DevMind AI</span>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ path, label, icon: Icon }) => {
-          const active = location === path;
-          return (
-            <Link
-              key={path}
-              href={path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4 flex-shrink-0" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      {isAuthenticated && (
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {navItems.map(({ path, label, icon: Icon }) => {
+            const active = location === path;
+            return (
+              <Link
+                key={path}
+                href={path}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  active
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
+
+      {!isAuthenticated && <div className="flex-1" />}
 
       <div className="px-4 py-3 border-t border-sidebar-border space-y-2">
         {isAuthenticated && user ? (
@@ -108,7 +112,7 @@ function Sidebar() {
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">v1.0.0</span>
           <div className="flex items-center gap-1">
-            {!isAuthenticated && (
+            {!isLoading && !isAuthenticated && (
               <Button
                 variant="ghost"
                 size="sm"
