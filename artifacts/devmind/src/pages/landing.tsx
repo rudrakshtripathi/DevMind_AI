@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView, useReducedMotion, AnimatePresence } from "framer-motion";
 import {
   Shield, Workflow, BookOpen, AlertTriangle, ChevronDown,
-  CheckCircle2, Zap, Lock, Globe, ArrowRight, Github,
-  Twitter, Star, TrendingUp, Clock, Users, Code2,
+  ChevronLeft, ChevronRight, CheckCircle2, Zap, Lock, Globe,
+  ArrowRight, Github, Twitter, Star, TrendingUp, Clock, Code2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -327,136 +327,314 @@ function SocialProof() {
   );
 }
 
-// ── Features ─────────────────────────────────────────────────────
+// ── Features carousel ────────────────────────────────────────────
 const features = [
   {
     icon: Shield,
     color: "bg-red-500/15 text-red-400",
+    iconColor: "text-red-400",
+    gradientFrom: "from-red-500/10",
+    tag: "Security",
     title: "AI Security Scanner",
     description:
-      "Instantly detect SQL injection, XSS, insecure dependencies, and dozens of other vulnerability classes across any language — with a severity score and fix suggestions.",
+      "Instantly detect SQL injection, XSS, insecure dependencies, and dozens of other vulnerability classes across any language — with a severity score and targeted fix suggestions.",
+    bullets: [
+      "SQL injection, XSS & CSRF detection",
+      "Dependency vulnerability auditing",
+      "Severity scoring with one-click fix guidance",
+      "Supports Python, JS, Go, Rust, Java & more",
+    ],
   },
   {
     icon: Workflow,
     color: "bg-purple-500/15 text-purple-400",
+    iconColor: "text-purple-400",
+    gradientFrom: "from-purple-500/10",
+    tag: "Automation",
     title: "AI Workflow Builder",
     description:
-      "Describe your CI/CD pipeline in plain English. DevMind generates a complete workflow diagram and config you can copy straight into your infrastructure.",
+      "Describe your CI/CD pipeline in plain English and get a complete workflow diagram and production-ready config back in seconds.",
+    bullets: [
+      "Natural-language pipeline definition",
+      "GitHub Actions, GitLab CI & CircleCI output",
+      "Visual flow diagram with dependency graph",
+      "Instant copy-paste YAML generation",
+    ],
   },
   {
     icon: BookOpen,
     color: "bg-blue-500/15 text-blue-400",
+    iconColor: "text-blue-400",
+    gradientFrom: "from-blue-500/10",
+    tag: "Knowledge",
     title: "Codebase Knowledge AI",
     description:
-      "Index your entire repository and ask natural language questions. Get precise answers with file references — like a senior engineer who knows every corner of your codebase.",
+      "Index your entire repository and ask natural-language questions. Get precise answers with file references — like a senior engineer who knows every corner of your codebase.",
+    bullets: [
+      "Full-repo semantic indexing",
+      "Answers with exact file + line references",
+      "Architecture and dependency mapping",
+      "Works with any language or framework",
+    ],
   },
   {
     icon: AlertTriangle,
     color: "bg-orange-500/15 text-orange-400",
+    iconColor: "text-orange-400",
+    gradientFrom: "from-orange-500/10",
+    tag: "Debugging",
     title: "Root Cause Analyzer",
     description:
-      "Paste any error log or stack trace. DevMind pinpoints the root cause, the affected component, confidence level, and step-by-step remediation instructions.",
+      "Paste any error log or stack trace. DevMind pinpoints the root cause, affected component, confidence level, and step-by-step remediation.",
+    bullets: [
+      "Stack trace & log parsing for any language",
+      "Root cause with confidence score",
+      "Affected component map",
+      "Step-by-step fix instructions",
+    ],
   },
 ];
 
-function FeatureCard({
-  f,
-  index,
-  inView,
-  reduced,
-}: {
-  f: (typeof features)[number];
-  index: number;
-  inView: boolean;
-  reduced: boolean | null;
-}) {
-  const cardVariants = {
-    hidden: { opacity: 0, y: reduced ? 0 : 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: reduced ? 0 : 0.5,
-        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-        delay: reduced ? 0 : index * 0.13,
-      },
-    },
-  };
-
-  const iconVariants = {
-    hidden: { opacity: 0, scale: reduced ? 1 : 0.55 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: reduced ? 0 : 0.38,
-        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-        delay: reduced ? 0 : index * 0.13 + 0.18,
-      },
-    },
-  };
-
-  return (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate={inView ? "visible" : "hidden"}
-      whileHover={
-        reduced
-          ? {}
-          : {
-              y: -5,
-              boxShadow: "0 20px 44px -12px hsl(235 86% 65% / 0.22)",
-              transition: { duration: 0.22, ease: "easeOut" },
-            }
-      }
-      className={cn(
-        "group relative bg-card rounded-2xl p-7 h-full cursor-default",
-        "border border-card-border hover:border-primary/55",
-        "transition-[border-color] duration-300",
-      )}
-    >
-      {/* Icon with animate-in */}
-      <motion.div
-        variants={iconVariants}
-        initial="hidden"
-        animate={inView ? "visible" : "hidden"}
-        className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center mb-5",
-          "transition-transform duration-300 group-hover:scale-110",
-          f.color,
-        )}
-      >
-        <f.icon className="h-5 w-5" />
-      </motion.div>
-
-      <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-      <p className="text-muted-foreground text-sm leading-relaxed">{f.description}</p>
-    </motion.div>
-  );
-}
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? "-60%" : "60%", opacity: 0 }),
+};
 
 function Features() {
   const reduced = useReducedMotion();
-  const gridRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(gridRef, { once: true, margin: "-80px" });
+  const [active, setActive] = useState(0);
+  const [dir, setDir] = useState(1);
+  const autoRef = useRef<ReturnType<typeof setInterval>>();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(sectionRef, { once: true, margin: "-100px" });
+
+  const startAuto = () => {
+    clearInterval(autoRef.current);
+    autoRef.current = setInterval(() => {
+      setDir(1);
+      setActive((c) => (c + 1) % features.length);
+    }, 4500);
+  };
+
+  useEffect(() => {
+    startAuto();
+    return () => clearInterval(autoRef.current);
+  }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowRight") go(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [active]);
+
+  const go = (d: number) => {
+    setDir(d);
+    setActive((c) => (c + features.length + d) % features.length);
+    startAuto();
+  };
+
+  const goTo = (i: number) => {
+    if (i === active) return;
+    setDir(i > active ? 1 : -1);
+    setActive(i);
+    startAuto();
+  };
+
+  const f = features[active];
 
   return (
-    <section id="features" className="py-28 px-6">
-      <div className="max-w-6xl mx-auto">
-        <FadeUp className="text-center mb-16">
+    <section id="features" ref={sectionRef} className="py-28 px-6">
+      <div className="max-w-5xl mx-auto">
+        <FadeUp className="text-center mb-14">
           <span className="text-xs font-semibold text-primary uppercase tracking-widest">Features</span>
           <h2 className="text-4xl font-bold mt-3 mb-4">Four modules, one platform</h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Everything a modern engineering team needs to ship with confidence, powered by the latest AI models.
+            Everything a modern engineering team needs to ship with confidence.
           </p>
         </FadeUp>
 
-        <div ref={gridRef} className="grid sm:grid-cols-2 gap-5">
-          {features.map((f, i) => (
-            <FeatureCard key={f.title} f={f} index={i} inView={inView} reduced={reduced} />
-          ))}
-        </div>
+        {/* Carousel */}
+        <FadeUp delay={0.1}>
+          <div
+            className="relative"
+            onMouseEnter={() => clearInterval(autoRef.current)}
+            onMouseLeave={startAuto}
+          >
+            {/* Card stage */}
+            <div className="overflow-hidden rounded-3xl">
+              <AnimatePresence mode="popLayout" custom={dir} initial={false}>
+                <motion.div
+                  key={active}
+                  custom={dir}
+                  variants={reduced ? {} : slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ type: "spring", stiffness: 320, damping: 34, mass: 0.9 }}
+                  drag={reduced ? false : "x"}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.08}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x < -60) go(1);
+                    else if (info.offset.x > 60) go(-1);
+                  }}
+                  className={cn(
+                    "relative bg-card border border-card-border rounded-3xl overflow-hidden",
+                    "cursor-grab active:cursor-grabbing select-none",
+                  )}
+                >
+                  {/* Gradient accent */}
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-gradient-to-br to-transparent pointer-events-none",
+                      f.gradientFrom,
+                    )}
+                  />
+
+                  <div className="relative flex flex-col lg:flex-row gap-0">
+                    {/* Left panel */}
+                    <div className="flex-1 p-8 lg:p-12">
+                      {/* Tag + counter */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <span
+                          className={cn(
+                            "text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md",
+                            f.color,
+                          )}
+                        >
+                          {f.tag}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {active + 1} of {features.length}
+                        </span>
+                      </div>
+
+                      {/* Icon */}
+                      <motion.div
+                        key={`icon-${active}`}
+                        initial={reduced ? {} : { scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                        className={cn(
+                          "w-14 h-14 rounded-2xl flex items-center justify-center mb-6",
+                          f.color,
+                        )}
+                      >
+                        <f.icon className="h-7 w-7" />
+                      </motion.div>
+
+                      <h3 className="text-2xl lg:text-3xl font-bold mb-3">{f.title}</h3>
+                      <p className="text-muted-foreground leading-relaxed text-base mb-8 max-w-md">
+                        {f.description}
+                      </p>
+
+                      {/* Bullets */}
+                      <div className="grid sm:grid-cols-2 gap-2.5">
+                        {f.bullets.map((b, i) => (
+                          <motion.div
+                            key={b}
+                            initial={reduced ? {} : { opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 + i * 0.07, duration: 0.3 }}
+                            className="flex items-start gap-2 text-sm"
+                          >
+                            <CheckCircle2 className={cn("h-4 w-4 flex-shrink-0 mt-0.5", f.iconColor)} />
+                            <span className="text-muted-foreground">{b}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right panel – visual accent */}
+                    <div className="hidden lg:flex flex-col items-center justify-center w-72 p-10 border-l border-card-border/60 bg-muted/20 gap-6">
+                      <motion.div
+                        key={`big-icon-${active}`}
+                        initial={reduced ? {} : { scale: 0.5, opacity: 0, rotate: -10 }}
+                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                        className={cn(
+                          "w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl",
+                          f.color,
+                        )}
+                      >
+                        <f.icon className="h-12 w-12" />
+                      </motion.div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">Module</p>
+                        <p className="text-sm font-semibold">{f.title}</p>
+                      </div>
+                      {/* Progress pips */}
+                      <div className="flex flex-col gap-1.5 w-full">
+                        {features.map((feat, i) => (
+                          <button
+                            key={feat.title}
+                            onClick={() => goTo(i)}
+                            className={cn(
+                              "h-1 rounded-full transition-all duration-500 w-full",
+                              i === active ? "bg-primary" : "bg-muted-foreground/20 hover:bg-muted-foreground/40",
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Arrow buttons */}
+            <button
+              onClick={() => go(-1)}
+              className={cn(
+                "absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5",
+                "w-10 h-10 rounded-full bg-card border border-card-border shadow-md",
+                "flex items-center justify-center text-muted-foreground",
+                "hover:text-foreground hover:border-primary/40 hover:shadow-lg",
+                "transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              )}
+              aria-label="Previous feature"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => go(1)}
+              className={cn(
+                "absolute right-0 top-1/2 -translate-y-1/2 translate-x-5",
+                "w-10 h-10 rounded-full bg-card border border-card-border shadow-md",
+                "flex items-center justify-center text-muted-foreground",
+                "hover:text-foreground hover:border-primary/40 hover:shadow-lg",
+                "transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              )}
+              aria-label="Next feature"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Tab row */}
+          <div className="flex flex-wrap justify-center gap-2 mt-8">
+            {features.map((feat, i) => (
+              <button
+                key={feat.title}
+                onClick={() => goTo(i)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all duration-250",
+                  i === active
+                    ? "bg-primary text-primary-foreground border-primary shadow-md"
+                    : "bg-card text-muted-foreground border-card-border hover:border-primary/40 hover:text-foreground",
+                )}
+              >
+                <feat.icon className="h-3.5 w-3.5" />
+                {feat.title}
+              </button>
+            ))}
+          </div>
+        </FadeUp>
       </div>
     </section>
   );
