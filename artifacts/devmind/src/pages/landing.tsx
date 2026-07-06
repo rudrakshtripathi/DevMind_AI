@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
   Shield, Workflow, BookOpen, AlertTriangle, ChevronDown,
   CheckCircle2, Zap, Lock, Globe, ArrowRight, Github,
@@ -359,7 +359,88 @@ const features = [
   },
 ];
 
+function FeatureCard({
+  f,
+  index,
+  inView,
+  reduced,
+}: {
+  f: (typeof features)[number];
+  index: number;
+  inView: boolean;
+  reduced: boolean | null;
+}) {
+  const cardVariants = {
+    hidden: { opacity: 0, y: reduced ? 0 : 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: reduced ? 0 : 0.5,
+        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+        delay: reduced ? 0 : index * 0.13,
+      },
+    },
+  };
+
+  const iconVariants = {
+    hidden: { opacity: 0, scale: reduced ? 1 : 0.55 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: reduced ? 0 : 0.38,
+        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+        delay: reduced ? 0 : index * 0.13 + 0.18,
+      },
+    },
+  };
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      whileHover={
+        reduced
+          ? {}
+          : {
+              y: -5,
+              boxShadow: "0 20px 44px -12px hsl(235 86% 65% / 0.22)",
+              transition: { duration: 0.22, ease: "easeOut" },
+            }
+      }
+      className={cn(
+        "group relative bg-card rounded-2xl p-7 h-full cursor-default",
+        "border border-card-border hover:border-primary/55",
+        "transition-[border-color] duration-300",
+      )}
+    >
+      {/* Icon with animate-in */}
+      <motion.div
+        variants={iconVariants}
+        initial="hidden"
+        animate={inView ? "visible" : "hidden"}
+        className={cn(
+          "w-10 h-10 rounded-xl flex items-center justify-center mb-5",
+          "transition-transform duration-300 group-hover:scale-110",
+          f.color,
+        )}
+      >
+        <f.icon className="h-5 w-5" />
+      </motion.div>
+
+      <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
+      <p className="text-muted-foreground text-sm leading-relaxed">{f.description}</p>
+    </motion.div>
+  );
+}
+
 function Features() {
+  const reduced = useReducedMotion();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(gridRef, { once: true, margin: "-80px" });
+
   return (
     <section id="features" className="py-28 px-6">
       <div className="max-w-6xl mx-auto">
@@ -371,22 +452,9 @@ function Features() {
           </p>
         </FadeUp>
 
-        <div className="grid sm:grid-cols-2 gap-5">
+        <div ref={gridRef} className="grid sm:grid-cols-2 gap-5">
           {features.map((f, i) => (
-            <FadeUp key={f.title} delay={i * 0.08}>
-              <div className="group relative bg-card border border-card-border rounded-2xl p-7 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 h-full">
-                <div
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 duration-300",
-                    f.color,
-                  )}
-                >
-                  <f.icon className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{f.description}</p>
-              </div>
-            </FadeUp>
+            <FeatureCard key={f.title} f={f} index={i} inView={inView} reduced={reduced} />
           ))}
         </div>
       </div>
