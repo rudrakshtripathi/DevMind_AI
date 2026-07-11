@@ -559,10 +559,25 @@ function SocialProof() {
   return (
     <section className="border-y border-border bg-muted/30 py-12 overflow-hidden [--play:running] hover:[--play:paused]">
       <style>{`
-        @keyframes devmind-marquee-left  { from { transform: translateX(0) } to { transform: translateX(-50%) } }
-        @keyframes devmind-marquee-right { from { transform: translateX(-50%) } to { transform: translateX(0) } }
-        .dm-scroll-left  { animation: devmind-marquee-left  32s linear infinite; animation-play-state: var(--play, running); }
-        .dm-scroll-right { animation: devmind-marquee-right 28s linear infinite; animation-play-state: var(--play, running); }
+        @keyframes dm-marquee-left {
+          0%   { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
+        }
+        @keyframes dm-marquee-right {
+          0%   { transform: translate3d(-50%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
+        }
+        .dm-scroll-left,
+        .dm-scroll-right {
+          will-change: transform;
+          animation-duration: 30s;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+          animation-delay: 0s;
+          animation-play-state: var(--play, running);
+        }
+        .dm-scroll-left  { animation-name: dm-marquee-left;  }
+        .dm-scroll-right { animation-name: dm-marquee-right; }
       `}</style>
 
       <p className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-8 px-6">
@@ -570,7 +585,7 @@ function SocialProof() {
       </p>
 
       <div className="space-y-3">
-        {/* Row 1 – scrolls left */}
+        {/* Row 1 – scrolls right → left */}
         <div className="flex overflow-hidden mask-fade-x">
           <div className="flex dm-scroll-left">
             {[...row1Langs, ...row1Langs].map((l, i) => (
@@ -579,7 +594,7 @@ function SocialProof() {
           </div>
         </div>
 
-        {/* Row 2 – scrolls right */}
+        {/* Row 2 – scrolls left → right */}
         <div className="flex overflow-hidden mask-fade-x">
           <div className="flex dm-scroll-right">
             {[...row2Langs, ...row2Langs].map((l, i) => (
