@@ -555,6 +555,8 @@ function LangBadge({ name, dot }: { name: string; dot: string }) {
   );
 }
 
+const MASK_FADE = "linear-gradient(to right, transparent 0px, black 80px, black calc(100% - 80px), transparent 100%)";
+
 function SocialProof() {
   return (
     <section className="border-y border-border bg-muted/30 py-12 overflow-hidden [--play:running] hover:[--play:paused]">
@@ -567,8 +569,10 @@ function SocialProof() {
           0%   { transform: translate3d(-50%, 0, 0); }
           100% { transform: translate3d(0, 0, 0); }
         }
-        .dm-scroll-left,
-        .dm-scroll-right {
+        .dm-track {
+          display: flex;
+          align-items: center;
+          width: max-content;
           will-change: transform;
           animation-duration: 30s;
           animation-timing-function: linear;
@@ -586,8 +590,11 @@ function SocialProof() {
 
       <div className="space-y-3">
         {/* Row 1 – scrolls right → left */}
-        <div className="flex overflow-hidden mask-fade-x">
-          <div className="flex dm-scroll-left">
+        <div
+          className="overflow-hidden"
+          style={{ maskImage: MASK_FADE, WebkitMaskImage: MASK_FADE }}
+        >
+          <div className="dm-track dm-scroll-left">
             {[...row1Langs, ...row1Langs].map((l, i) => (
               <LangBadge key={i} {...l} />
             ))}
@@ -595,8 +602,11 @@ function SocialProof() {
         </div>
 
         {/* Row 2 – scrolls left → right */}
-        <div className="flex overflow-hidden mask-fade-x">
-          <div className="flex dm-scroll-right">
+        <div
+          className="overflow-hidden"
+          style={{ maskImage: MASK_FADE, WebkitMaskImage: MASK_FADE }}
+        >
+          <div className="dm-track dm-scroll-right">
             {[...row2Langs, ...row2Langs].map((l, i) => (
               <LangBadge key={i} {...l} />
             ))}
