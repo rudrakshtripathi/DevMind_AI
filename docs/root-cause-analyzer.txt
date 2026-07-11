@@ -1,0 +1,423 @@
+═══════════════════════════════════════════════════════════════════
+                    ROOT CAUSE ANALYZER
+              DevMind AI — Feature Deep Dive
+═══════════════════════════════════════════════════════════════════
+
+
+OVERVIEW
+────────
+The Root Cause Analyzer takes any error log, stack trace, exception
+output, or crash report and pinpoints the root cause — not just the
+immediate error, but the underlying reason it occurred — along with
+the affected component, a confidence score, and step-by-step fix
+instructions.
+
+It eliminates the "20 minutes of staring at a stack trace" phase of
+debugging. You paste the error, and within seconds you have a clear
+diagnosis and a concrete path to resolution.
+
+It works across every language, runtime, and platform. Java stack traces,
+Python tracebacks, Node.js async errors, Go panics, Rust panics, kernel
+crash logs, SQL query errors, Docker/Kubernetes errors — all understood.
+
+
+─────────────────────────────────────────────────────────────────────
+STEP-BY-STEP WORKFLOW
+─────────────────────────────────────────────────────────────────────
+
+STEP 1 — INPUT SUBMISSION
+   The user pastes one or more of the following:
+     • A stack trace or exception output
+     • Application log output (can be noisy, multi-line)
+     • A crash report or core dump summary
+     • An error message from a terminal, CI pipeline, or monitoring tool
+     • A combination: logs + the code context where the error occurs
+
+   The input can be:
+     • A clean, isolated stack trace (ideal)
+     • A large blob of mixed logs with the error somewhere inside
+     • A screenshot of a terminal (text recognized and extracted)
+
+   The analyzer handles noise gracefully. If you paste 500 lines of
+   logs with one error buried inside, it will find and focus on the
+   error signal.
+
+   Optional additional context:
+     • The code file where the error originated (helps with precise fix)
+     • Recent changes you made before the error appeared
+     • The environment (production, staging, local dev)
+     • Runtime version, OS, relevant configuration values
+
+STEP 2 — ERROR PARSING & CLASSIFICATION
+   The raw input is parsed to identify:
+
+   LANGUAGE / RUNTIME DETECTION
+     The analyzer recognizes error formats from:
+       Python (traceback, SyntaxError, AttributeError, ...)
+       JavaScript / Node.js (V8 stack traces, async stack traces)
+       TypeScript (tsc errors, ts-node errors)
+       Java (JVM stack traces, Spring Boot, Hibernate errors)
+       Go (goroutine panics, runtime errors)
+       Rust (panic!, thread main panicked, ...)
+       Ruby (backtrace format, Rails errors)
+       C++ (segfault reports, asan/ubsan output)
+       PHP (Fatal error, Parse error, Warning)
+       Kotlin / Android (logcat output)
+       Swift / iOS (crash reports, EXC_BAD_ACCESS)
+       SQL (query errors from PostgreSQL, MySQL, SQLite)
+       Docker / Kubernetes (container errors, OOMKilled, CrashLoopBackOff)
+       Bash / Shell (command not found, exit codes)
+       HTTP (4xx, 5xx response bodies)
+       Nginx / Apache (access/error log formats)
+       Infrastructure (AWS CloudWatch, GCP Logging, Azure Monitor)
+
+   ERROR TYPE CLASSIFICATION
+     Once the language is identified, the error is classified into
+     one of the following categories:
+
+       NULL_REFERENCE      — NullPointerException, AttributeError: NoneType
+       TYPE_ERROR          — passing wrong type to a function
+       INDEX_OUT_OF_BOUNDS — list/array access beyond its length
+       IMPORT_NOT_FOUND    — missing module, wrong import path
+       NETWORK_FAILURE     — connection refused, timeout, DNS failure
+       PERMISSION_DENIED   — filesystem, process, or OS permission issue
+       SYNTAX_ERROR        — malformed code caught at parse/compile time
+       RUNTIME_PANIC       — Go panic, Rust panic, unhandled exception
+       DATABASE_ERROR      — query failure, constraint violation, connection issue
+       MEMORY_ERROR        — OOM, buffer overflow, use-after-free
+       CONCURRENCY_ERROR   — deadlock, race condition, mutex violation
+       CONFIGURATION_ERROR — missing env var, wrong config value
+       DEPENDENCY_ERROR    — version conflict, missing dependency
+       AUTHENTICATION_ERROR — token expired, invalid credentials
+
+STEP 3 — CALL STACK PARSING
+   The stack trace frames are parsed bottom-to-top to identify:
+
+   THE CRASH POINT (top of stack)
+     The exact file, function, and line number where the exception was
+     raised. This is what most engineers look at first, but it is often
+     not the root cause — it's just where the failure surfaced.
+
+   THE ROOT CAUSE FRAME
+     The frame in the stack that represents where the mistake was made.
+     This is determined by:
+       a) Filtering out framework/runtime frames (application code is
+          more likely to contain the bug than library internals)
+       b) Tracing the error backwards through the call chain
+       c) Identifying which frame passed incorrect or null data to
+          the frame above it
+       d) Checking whether the error is a symptom of an earlier silent
+          failure that wasn't caught
+
+   Example:
+     Java NullPointerException at line 88 of OrderService.java
+     Stack shows: OrderController → OrderService → PaymentGateway
+     Root cause: PaymentGateway returned null (not checked), not the
+     NPE itself — the real bug is missing null check in OrderService.
+
+   THE ERROR PROPAGATION PATH
+     The chain of calls that led from the root cause to the crash point.
+     Visualized as a numbered call chain:
+       1. HTTP request enters OrderController.createOrder() [line 34]
+       2. Calls OrderService.processPayment() [line 56]
+       3. Calls PaymentGateway.charge() [line 88] → returns null
+       4. OrderService uses return value without null check [line 92]
+       5. NullPointerException raised [line 92]
+
+STEP 4 — ROOT CAUSE HYPOTHESIS GENERATION
+   Using the parsed error information, the system generates one or more
+   root cause hypotheses. Each hypothesis is scored for confidence:
+
+   PRIMARY HYPOTHESIS (confidence %)
+     The most likely explanation for the error, based on:
+       • The error type and message
+       • The crash frame and surrounding code (if provided)
+       • Known patterns for this error type in this language/framework
+       • Whether optional context (recent changes, environment) matches
+
+   ALTERNATIVE HYPOTHESES
+     If the error has multiple plausible causes, alternates are listed
+     in descending confidence order. Example for "Connection Refused":
+       1. Service not running (85% confidence)
+       2. Wrong host/port in config (10% confidence)
+       3. Firewall blocking the connection (5% confidence)
+
+   CONTRIBUTING FACTORS
+     Secondary conditions that made the error more likely or harder to
+     catch:
+       • Missing error handling at an earlier step
+       • No retry logic for a transient failure
+       • Incorrect assumptions about API response shape
+       • Missing environment variable defaulting
+
+STEP 5 — AFFECTED COMPONENT IDENTIFICATION
+   The analyzer identifies which part of the system is affected:
+
+   COMPONENT LAYER
+     • Presentation / API layer (route handlers, controllers)
+     • Business logic layer (services, use cases)
+     • Data access layer (repositories, ORM, raw SQL)
+     • Infrastructure layer (config loading, external API calls)
+     • Build / compile time (not a runtime error)
+
+   COMPONENT NAME
+     The specific class, service, module, or function responsible.
+     E.g. "PaymentService", "UserRepository", "AuthMiddleware".
+
+   BLAST RADIUS ESTIMATE
+     Assessment of how widespread the impact is:
+       ISOLATED  — affects one specific code path under specific conditions
+       MODERATE  — affects a user-facing feature or background job
+       BROAD     — affects a core service; multiple features degraded
+       CRITICAL  — application cannot start or process any requests
+
+STEP 6 — REMEDIATION GUIDE GENERATION
+   A step-by-step fix plan is generated. This is not generic advice —
+   it is specific to the error, language, and context provided.
+
+   The remediation guide includes:
+
+   IMMEDIATE FIX (the specific code change needed)
+     The minimal change to eliminate this error. Shown as a before/after
+     code diff when possible.
+
+   Example for a Python AttributeError: 'NoneType' has no attr 'id':
+
+     Before:
+       user = get_user(email)
+       return user.id        # crashes if user not found
+
+     After:
+       user = get_user(email)
+       if user is None:
+           raise UserNotFoundError(f"No user with email {email}")
+       return user.id
+
+   ROOT CAUSE FIX (the deeper change to prevent recurrence)
+     Often the immediate fix is a patch on a symptom. The root cause
+     fix addresses the underlying design issue:
+       "get_user() should either raise an exception when no user is
+        found, or return an Optional type with explicit None handling.
+        Returning None silently and expecting callers to check it is
+        a fragile API contract."
+
+   VERIFICATION STEPS
+     How to confirm the fix works:
+       • What test to run
+       • What log line to look for
+       • What API call to make to reproduce and then verify the fix
+
+   PREVENTION MEASURES
+     Changes to prevent this class of error in the future:
+       • Add a unit test for the "not found" case
+       • Add a type annotation (Optional[User]) to make the contract explicit
+       • Add a linting rule (mypy, pyright) to catch unhandled optionals
+
+   MONITORING RECOMMENDATION
+     What alert or metric to add so this error is caught early if it
+     recurs, before it reaches production impact:
+       • Track 5xx error rate on /api/users endpoint
+       • Add Sentry error capture to the service layer
+       • Log a WARNING when get_user returns None
+
+STEP 7 — STRUCTURED RESULTS DISPLAY
+   The complete analysis is presented in a structured report:
+
+     ┌──────────────────────────────────────────────────────────┐
+     │  Root Cause Analysis — Complete                         │
+     │                                                          │
+     │  ERROR TYPE: AttributeError (Python)                    │
+     │  CONFIDENCE: 94%                                         │
+     │                                                          │
+     │  Root Cause                                              │
+     │  get_user() returns None when the user is not found,    │
+     │  but the caller on line 92 of auth_service.py uses      │
+     │  the return value without a None check.                  │
+     │                                                          │
+     │  Affected Component                                      │
+     │  AuthService.authenticate() — Business Logic Layer      │
+     │  Blast Radius: MODERATE (login flow broken for users    │
+     │  with unregistered emails)                               │
+     │                                                          │
+     │  Call Chain                                              │
+     │  1. POST /login → AuthController (routes/auth.py:34)    │
+     │  2. → AuthService.authenticate() (services/auth.py:88)  │
+     │  3. → UserRepository.find_by_email() → returns None     │
+     │  4. → user.id accessed → AttributeError                 │
+     │                                                          │
+     │  Fix (Immediate)                                         │
+     │  Add None check after find_by_email() call.             │
+     │  [See code diff below]                                   │
+     │                                                          │
+     │  Fix (Root Cause)                                        │
+     │  Raise UserNotFoundError inside find_by_email() instead │
+     │  of returning None. Update callers to catch it.         │
+     └──────────────────────────────────────────────────────────┘
+
+
+─────────────────────────────────────────────────────────────────────
+COMMON ERROR PATTERNS RECOGNIZED
+─────────────────────────────────────────────────────────────────────
+
+NULL / NONE REFERENCE ERRORS
+  Python:     AttributeError: 'NoneType' object has no attribute 'x'
+  Java:       java.lang.NullPointerException
+  JavaScript: TypeError: Cannot read properties of null/undefined
+  Go:         runtime error: invalid memory address or nil pointer dereference
+  Rust:       called `Option::unwrap()` on a `None` value
+  Swift:      Fatal error: Unexpectedly found nil while unwrapping an Optional
+
+INDEX / BOUNDS ERRORS
+  Python:     IndexError: list index out of range
+  Java:       java.lang.ArrayIndexOutOfBoundsException
+  JavaScript: TypeError: undefined is not a function (array empty)
+  Go:         runtime error: index out of range [N] with length M
+
+IMPORT / MODULE ERRORS
+  Python:     ModuleNotFoundError: No module named 'x'
+  Node.js:    Cannot find module './x' or its type declarations
+  Go:         cannot find package "x" in any of: ...
+
+DATABASE ERRORS
+  PostgreSQL: relation "x" does not exist
+  PostgreSQL: column "x" of relation "y" does not exist
+  PostgreSQL: duplicate key value violates unique constraint
+  MySQL:      Table 'db.table' doesn't exist
+  SQLite:     no such table: x
+  ORM:        FOREIGN KEY constraint failed
+  Prisma:     The column `x` does not exist in the current database.
+
+NETWORK / CONNECTION ERRORS
+  Connection refused (service not running or wrong port)
+  Connection timed out (firewall, overloaded service, wrong host)
+  ECONNRESET (connection dropped mid-request)
+  DNS lookup failed (wrong hostname, no DNS record)
+  SSL certificate verification failed
+
+AUTHENTICATION / TOKEN ERRORS
+  JWT expired
+  Invalid signature
+  401 Unauthorized (missing or wrong credentials)
+  403 Forbidden (authenticated but not authorized)
+  CSRF token mismatch
+
+KUBERNETES / CONTAINER ERRORS
+  CrashLoopBackOff (container keeps crashing; check logs for reason)
+  OOMKilled (Out of Memory; container exceeded memory limit)
+  ImagePullBackOff (image not found or registry auth failure)
+  Pending pod (insufficient cluster resources)
+  ErrImagePull (network issue or wrong image tag)
+
+DEPLOYMENT / BUILD ERRORS
+  "Cannot find module" in production (missing build step or wrong paths)
+  Environment variable not set (missing .env or secrets injection)
+  Port already in use (another process using the same port)
+  Permission denied on file or directory
+
+
+─────────────────────────────────────────────────────────────────────
+HANDLING NOISY / MULTI-ERROR LOGS
+─────────────────────────────────────────────────────────────────────
+
+Real-world logs are rarely clean. The analyzer handles:
+
+MULTIPLE ERRORS IN ONE LOG
+  When multiple distinct errors appear, the analyzer separates them,
+  analyzes each independently, and indicates which is likely the
+  primary failure vs. downstream cascading errors.
+
+  Example: A database connection failure at startup will cause dozens
+  of "undefined method for nil" errors downstream. The analyzer
+  identifies the database connection failure as the root and flags the
+  others as cascading effects.
+
+TRUNCATED STACK TRACES
+  Logs truncated by character limits or log shipping systems are
+  handled gracefully. The analyzer works with whatever frames are
+  present and notes that the trace may be incomplete.
+
+MINIFIED / OBFUSCATED STACK TRACES
+  JavaScript source maps (if provided as additional context) are used
+  to resolve minified line numbers to original source locations.
+
+LOG TIMESTAMPS & CONTEXT
+  Timestamps in logs help the analyzer understand event ordering.
+  It can identify "the error at 14:32:11 is a consequence of the
+  warning at 14:32:09" by reading the sequence.
+
+REPEATED ERRORS
+  When the same error appears hundreds of times in a log, the analyzer
+  deduplicates and focuses on the first occurrence plus any pattern
+  in the repetition (e.g. every 30 seconds = a cron job failing).
+
+
+─────────────────────────────────────────────────────────────────────
+USE CASES
+─────────────────────────────────────────────────────────────────────
+
+• PRODUCTION INCIDENTS
+  During an outage, paste the error logs and get the root cause in
+  seconds. Dramatically reduces mean time to resolution (MTTR).
+  No more "all hands on deck" for errors that could be diagnosed
+  in 30 seconds with the right tool.
+
+• CI PIPELINE FAILURES
+  A test or deploy step fails in CI. Paste the failed job log and get
+  an explanation of exactly what went wrong and how to fix it without
+  pulling the branch locally.
+
+• ON-CALL TRIAGE
+  Engineers on-call who encounter errors outside their area of expertise
+  can quickly get a diagnosis without waking up the subject-matter expert.
+
+• CUSTOMER SUPPORT ESCALATIONS
+  A customer reports an error with a stack trace. Support engineers
+  can analyze it without having a developer on the call.
+
+• DEBUGGING UNFAMILIAR CODE
+  When debugging code written by someone who has left the team or a
+  third-party library you don't control, get an outside-in explanation
+  of what the error means in context.
+
+• POST-MORTEM PREPARATION
+  Before a post-mortem meeting, run all relevant error logs through
+  the analyzer to build a clear timeline and causal chain to present
+  to the team.
+
+• JUNIOR DEVELOPER SUPPORT
+  New engineers encountering unfamiliar error types get an explanation
+  not just of the fix but of why the error occurred — turning every
+  bug into a learning opportunity.
+
+
+─────────────────────────────────────────────────────────────────────
+CONFIDENCE SCORE EXPLANATION
+─────────────────────────────────────────────────────────────────────
+
+The confidence score (0–100%) reflects how certain the analyzer is
+about its root cause hypothesis:
+
+  90–100%   Very high confidence. The error message and stack trace
+            unambiguously point to the root cause. Likely a well-known
+            pattern with a clear fix.
+
+  70–89%    High confidence. The primary hypothesis is strongly
+            supported but there are one or two plausible alternatives
+            listed for consideration.
+
+  50–69%    Moderate confidence. The error is ambiguous or the context
+            is limited. The analyzer provides its best hypothesis with
+            investigation steps to confirm.
+
+  30–49%    Lower confidence. The log is noisy, truncated, or involves
+            an unusual error pattern. Treat the output as a starting
+            point for manual investigation.
+
+  <30%      Low confidence. Insufficient information to diagnose.
+            The analyzer lists what additional context would help.
+
+Providing more context (code snippet, recent changes, environment
+details) always increases the confidence score.
+
+
+═══════════════════════════════════════════════════════════════════

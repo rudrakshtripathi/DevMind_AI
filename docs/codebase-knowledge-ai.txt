@@ -1,0 +1,351 @@
+═══════════════════════════════════════════════════════════════════
+                   CODEBASE KNOWLEDGE AI
+              DevMind AI — Feature Deep Dive
+═══════════════════════════════════════════════════════════════════
+
+
+OVERVIEW
+────────
+Codebase Knowledge AI indexes an entire software repository and lets
+you ask natural-language questions about it. Instead of spending 20
+minutes grepping through files and reading code you don't own, you ask
+a question like "Where is the payment retry logic handled?" and get a
+precise answer with exact file paths, line numbers, and an explanation
+of how the relevant code works.
+
+It works like having a senior engineer on the team who has read every
+single file in the repository and can instantly recall anything about
+its architecture, data flows, naming conventions, and edge cases.
+
+
+─────────────────────────────────────────────────────────────────────
+STEP-BY-STEP WORKFLOW
+─────────────────────────────────────────────────────────────────────
+
+STEP 1 — REPOSITORY SUBMISSION
+   The user provides the codebase in one of several ways:
+
+   Option A — File Upload
+     Upload a ZIP or tarball of the repository. All text-based source
+     files are extracted and queued for indexing.
+
+   Option B — Paste Selected Files
+     Paste the content of specific files directly into the input panel.
+     Useful when you only need answers about a specific subsystem.
+
+   Option C — Directory Structure Paste
+     Paste a file tree and the most relevant source files. The system
+     can answer structural questions even from partial content.
+
+   What is indexed:
+     Source code in any language (.ts, .py, .go, .rs, .java, .rb, ...)
+     Configuration files (.env.example, docker-compose.yml, nginx.conf)
+     Infrastructure-as-code (Terraform, Pulumi, Helm charts)
+     Documentation files (.md, .rst, .txt)
+     Schema definitions (SQL migrations, GraphQL schemas, Protobuf)
+     Package manifests (package.json, requirements.txt, Cargo.toml)
+
+   What is excluded:
+     Binary files, images, compiled artifacts, .git directory,
+     node_modules, .venv, target/, dist/, build/ directories.
+
+STEP 2 — SEMANTIC INDEXING
+   Once submitted, the codebase goes through a multi-stage indexing
+   pipeline:
+
+   Stage A — File Parsing
+     Each file is parsed according to its language to extract:
+       • Function and method definitions with their signatures
+       • Class definitions and their inheritance relationships
+       • Import and export declarations
+       • Interface and type definitions
+       • Constants and configuration values
+       • Comments and docstrings
+       • SQL queries, API endpoint definitions, event handlers
+
+   Stage B — Symbol Graph Construction
+     A graph is built connecting:
+       • Which file imports which other file
+       • Which function calls which other function
+       • Which class extends which other class
+       • Which component renders which other component
+       • Which database table is accessed by which service layer
+
+     This graph enables "how does X connect to Y?" questions that
+     require following chains of calls across files.
+
+   Stage C — Semantic Chunking
+     Code is split into semantically meaningful chunks (not arbitrary
+     fixed-size chunks). Each chunk is a coherent unit: a function,
+     a class, a configuration block, a migration, etc.
+
+   Stage D — Embedding Generation
+     Each chunk is converted into a numerical embedding — a vector
+     representation of its meaning in high-dimensional space. Similar
+     code concepts end up near each other in this space.
+
+   Stage E — Vector Index Storage
+     Embeddings are stored in a vector index that enables fast
+     similarity search. The index also retains:
+       • The original source text of each chunk
+       • File path and line number range
+       • Language and chunk type (function, class, config, etc.)
+       • Direct symbol links from the graph (Stage B)
+
+   Indexing time: typically 5–30 seconds depending on repository size.
+   Repositories up to ~200,000 lines of code are fully supported.
+
+STEP 3 — QUESTION UNDERSTANDING
+   When the user submits a question, the system first classifies its
+   intent to select the best retrieval strategy:
+
+   FACTUAL LOCATION QUESTIONS
+     "Where is X defined?" / "Which file handles Y?"
+     Strategy: Symbol lookup in the graph + similarity search.
+     Prioritizes: exact matches on function/class names.
+
+   HOW-IT-WORKS QUESTIONS
+     "How does authentication work?" / "Explain the payment flow."
+     Strategy: Graph traversal from entry points + semantic search.
+     Prioritizes: broad coverage across the relevant call chain.
+
+   DEPENDENCY QUESTIONS
+     "What depends on the UserService?" / "What does auth.ts import?"
+     Strategy: Direct graph traversal (import/call edges).
+     Prioritizes: structural graph data over semantic similarity.
+
+   PATTERN QUESTIONS
+     "Are there other places where we do X like this?"
+     Strategy: Semantic similarity search for similar code patterns.
+     Prioritizes: chunks that match the pattern, not just the keywords.
+
+   ARCHITECTURE QUESTIONS
+     "What is the overall architecture?" / "How are modules organized?"
+     Strategy: Aggregate information from README, high-level imports,
+     entry points, and file structure.
+
+   DEBUG QUESTIONS
+     "Why might X happen?" / "Could there be a race condition in Y?"
+     Strategy: Retrieve relevant code + generate analytical reasoning.
+
+STEP 4 — RETRIEVAL
+   Based on the question classification, the system runs one or more
+   retrieval passes:
+
+   SEMANTIC RETRIEVAL
+     The question is converted to an embedding. The vector index is
+     searched for the top-K most semantically similar chunks.
+     K is typically 8–15 chunks. Results include the source text and
+     file location of each matching chunk.
+
+   GRAPH RETRIEVAL
+     Starting from symbols identified in the question (e.g. a function
+     name mentioned), the system traverses the symbol graph to collect:
+       • The definition of that symbol
+       • Everything it calls
+       • Everything that calls it
+       • Its type dependencies
+     This gives deep context around a specific symbol.
+
+   KEYWORD RETRIEVAL
+     For exact identifiers, file names, or technical terms, a fallback
+     keyword search finds chunks containing the exact string. This
+     handles cases where semantic search might miss precise identifiers.
+
+   RERANKING
+     The combined pool of retrieved chunks is reranked using a cross-
+     encoder model that scores each chunk against the original question
+     for relevance. Only the top chunks pass to the answer generation
+     step. This removes false positives from the retrieval stage.
+
+STEP 5 — ANSWER GENERATION
+   The reranked chunks are assembled into a context window along with
+   the original question. The answer is generated with strict grounding:
+   every claim in the answer must be traceable to the retrieved source.
+
+   The answer includes:
+
+   a) Direct answer
+      A clear, plain-English response to the question.
+      No padding, no hedging, no hallucinated code.
+
+   b) Exact file references
+      "Found in src/middlewares/auth.ts, lines 42–78"
+      Clickable paths that open the exact location.
+
+   c) Code excerpts
+      The relevant code snippets extracted verbatim from the source,
+      formatted with syntax highlighting.
+
+   d) Call chain explanation (for "how does X work?" questions)
+      A step-by-step walkthrough of the code flow:
+        1. Request enters at routes/api.ts:POST /login (line 34)
+        2. Delegates to AuthService.login() in services/auth.ts (line 12)
+        3. Fetches user via UserRepository.findByEmail() (line 88)
+        4. Compares password with bcrypt.compare() (line 95)
+        5. Creates session via SessionService.create() (line 103)
+        6. Returns JWT signed with RS256 (line 112)
+
+   e) Related symbols
+      "You might also want to look at: AuthMiddleware (line 22),
+       RefreshTokenService (line 55), TokenBlacklist (line 67)"
+
+STEP 6 — RESULT DISPLAY
+   Results are shown in a structured panel:
+
+     ┌──────────────────────────────────────────────────────┐
+     │  Answer                                              │
+     │                                                      │
+     │  Auth middleware is defined in                       │
+     │  src/middlewares/auth.ts (lines 42–78).              │
+     │                                                      │
+     │  It validates the session cookie using openid-client │
+     │  v6, extracts the user ID from the token claims,     │
+     │  fetches the user record from the sessions table,    │
+     │  and attaches it to req.user for downstream routes.  │
+     │                                                      │
+     │  Sources                                             │
+     │  • src/middlewares/auth.ts     lines 42–78           │
+     │  • lib/db/schema/auth.ts       lines 14–28           │
+     │  • artifacts/api-server/src/   lines 6–18            │
+     │    routes/auth.ts                                    │
+     └──────────────────────────────────────────────────────┘
+
+
+─────────────────────────────────────────────────────────────────────
+WHAT YOU CAN ASK
+─────────────────────────────────────────────────────────────────────
+
+LOCATION QUESTIONS
+  "Where is the rate limiting middleware defined?"
+  "Which file handles Stripe webhook events?"
+  "Where is the database connection pool configured?"
+  "Find all places where we send emails."
+
+HOW-IT-WORKS QUESTIONS
+  "Explain how user authentication works end to end."
+  "How does the job queue system process background tasks?"
+  "Walk me through what happens when a user submits an order."
+  "How is caching implemented in this codebase?"
+
+DEPENDENCY & IMPACT QUESTIONS
+  "What would break if I changed the UserService interface?"
+  "Which modules depend on the Redis connection?"
+  "What imports auth.ts?"
+  "List all the database tables and which services access them."
+
+PATTERN QUESTIONS
+  "Are there other places in the code that do direct SQL string concat?"
+  "How many different places create HTTP clients? Are they consistent?"
+  "Which API routes are missing authentication middleware?"
+
+ARCHITECTURE QUESTIONS
+  "Give me a high-level overview of how this project is organized."
+  "What design pattern is used for the data access layer?"
+  "Is this a monolith or microservices? How are the domains separated?"
+  "What are the main entry points of this application?"
+
+DEBUG-ASSIST QUESTIONS
+  "Could there be a race condition in the checkout flow?"
+  "Why might users be getting logged out unexpectedly?"
+  "Is there any code that could cause N+1 database queries?"
+
+ONBOARDING QUESTIONS
+  "I'm new to this codebase. What are the 5 most important files to read?"
+  "How do I add a new API endpoint following existing conventions?"
+  "What test utilities are available and how are they used?"
+
+
+─────────────────────────────────────────────────────────────────────
+ARCHITECTURE & DEPENDENCY MAPPING
+─────────────────────────────────────────────────────────────────────
+
+Beyond answering individual questions, Codebase Knowledge AI can
+generate a full architecture overview on demand. This includes:
+
+MODULE MAP
+  A list of all top-level modules/packages with a one-line description
+  of each one's responsibility, inferred from its contents.
+
+DEPENDENCY GRAPH
+  A visual diagram showing which modules import which others.
+  Highlights circular dependencies, tightly coupled modules, and
+  isolated utility packages.
+
+ENTRY POINT LIST
+  All places where the application can be started or triggered:
+  HTTP server listeners, CLI entrypoints, cron jobs, queue consumers,
+  event listeners, serverless function handlers.
+
+DATABASE SCHEMA SUMMARY
+  Tables, their columns (inferred from ORM models or migrations),
+  and which service layer accesses each table.
+
+API SURFACE
+  All HTTP routes defined in the application, their methods,
+  path parameters, and the handler functions they call.
+
+EXTERNAL DEPENDENCIES
+  All third-party services called from the code: APIs, databases,
+  queues, storage buckets, authentication providers, etc.
+
+
+─────────────────────────────────────────────────────────────────────
+ACCURACY & LIMITATIONS
+─────────────────────────────────────────────────────────────────────
+
+WHAT IT DOES WELL
+  • Exact symbol lookups (function name, class name, variable name)
+  • Call chains within a single language
+  • Structural questions (imports, exports, dependencies)
+  • Finding patterns (all places a certain pattern occurs)
+  • Explaining well-structured, documented code
+
+LIMITATIONS
+  • Dynamic dispatch: if a function is called via a string-based lookup
+    (e.g. plugin systems, reflection), the graph may miss the link.
+  • Generated code: files generated at build time (e.g. Prisma client,
+    gRPC stubs) are indexed but their origin is opaque.
+  • Very large repos (>500k LOC): indexing time increases; extremely
+    large files may be chunked in ways that lose some context.
+  • Runtime behavior: the system understands static code, not runtime
+    state. It cannot tell you what value a variable has at runtime.
+
+CONFIDENCE SIGNALS
+  The system signals confidence levels in answers:
+    HIGH:   Symbol found via direct graph lookup, exact file/line cited.
+    MEDIUM: Found via semantic search, multiple candidate files exist.
+    LOW:    Inferred from indirect context; treat as a starting point.
+
+
+─────────────────────────────────────────────────────────────────────
+USE CASES
+─────────────────────────────────────────────────────────────────────
+
+• ONBOARDING NEW DEVELOPERS
+  Instead of a 2-hour walkthrough with a senior engineer, a new hire
+  can ask the codebase questions interactively and get answers at their
+  own pace without blocking anyone.
+
+• INCIDENT INVESTIGATION
+  During an outage, quickly locate the relevant code paths without
+  having to context-switch from the incident into unfamiliar code.
+
+• REFACTORING PLANNING
+  Before a large refactor, map all callers of the function/module to
+  understand the blast radius. No more grepping and hoping you got them all.
+
+• CROSS-TEAM COLLABORATION
+  A backend engineer can understand a frontend codebase (or vice versa)
+  without requiring a meeting. Ask in plain English, get plain English back.
+
+• COMPLIANCE AUDITS
+  Answer auditor questions like "Where does PII get logged?" or
+  "Which endpoints lack authentication?" without a manual code review.
+
+• DOCUMENTATION GENERATION
+  Use answers as the basis for writing architecture documentation,
+  runbooks, or onboarding guides.
+
+
+═══════════════════════════════════════════════════════════════════

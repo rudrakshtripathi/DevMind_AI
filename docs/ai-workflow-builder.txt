@@ -1,0 +1,387 @@
+═══════════════════════════════════════════════════════════════════
+                    AI WORKFLOW BUILDER
+              DevMind AI — Feature Deep Dive
+═══════════════════════════════════════════════════════════════════
+
+
+OVERVIEW
+────────
+The AI Workflow Builder converts plain-English descriptions of CI/CD
+pipelines into production-ready configuration files. Instead of reading
+hours of documentation for GitHub Actions, GitLab CI, or CircleCI, you
+describe what you want your pipeline to do in natural language and get
+back a complete, working YAML workflow with a visual dependency diagram.
+
+It understands the context of your stack (language, test framework,
+deployment target) and makes intelligent decisions about job structure,
+caching, parallelism, and environment secrets — the same decisions a
+senior DevOps engineer would make.
+
+
+─────────────────────────────────────────────────────────────────────
+STEP-BY-STEP WORKFLOW
+─────────────────────────────────────────────────────────────────────
+
+STEP 1 — NATURAL LANGUAGE INPUT
+   The user types a plain-English description of their desired pipeline.
+   This can range from a single sentence to a detailed paragraph.
+
+   Examples of valid inputs:
+
+   Simple:
+     "Run tests on every push, then deploy to AWS ECS if tests pass."
+
+   Detailed:
+     "When a PR is opened against main: run ESLint, then run Jest tests
+      in parallel for unit and integration suites. On merge to main:
+      build a Docker image, push it to ECR, scan it for vulnerabilities
+      with Trivy, then deploy to ECS production only if the scan passes.
+      Notify the team Slack channel on success or failure."
+
+   The system accepts any level of detail. Missing information is
+   inferred from common best practices, and ambiguities are resolved
+   with sensible defaults.
+
+STEP 2 — INTENT PARSING & ENTITY EXTRACTION
+   The input is processed to extract structured pipeline entities:
+
+   TRIGGERS (when does the pipeline run?)
+     • push to branch X
+     • pull_request opened/updated against branch Y
+     • schedule (cron expression)
+     • manual dispatch
+     • tag created (for release workflows)
+
+   JOBS (what units of work need to run?)
+     • lint / static analysis
+     • unit tests
+     • integration tests
+     • build / compile / bundle
+     • containerization (Docker build)
+     • security scanning
+     • deployment
+     • notification
+
+   DEPENDENCIES (what must complete before what?)
+     • "if tests pass" → deployment depends on test job
+     • "in parallel" → jobs have no dependency on each other
+     • "only if scan passes" → deployment depends on scan job
+
+   ENVIRONMENT CONTEXT
+     • Programming language and version (Node 20, Python 3.11, Go 1.22)
+     • Package manager (npm, pnpm, pip, cargo, maven)
+     • Test framework (Jest, pytest, go test, JUnit)
+     • Container registry (ECR, GCR, Docker Hub, GHCR)
+     • Deployment target (AWS ECS, GKE, Heroku, Vercel, Fly.io)
+
+STEP 3 — DEPENDENCY GRAPH CONSTRUCTION
+   Using the extracted jobs and dependencies, the system builds a
+   directed acyclic graph (DAG) of the pipeline:
+
+   Example DAG for a typical Node.js pipeline:
+
+     [Push to main]
+           │
+      ┌────┴────┐
+      │         │
+   [Lint]   [Type Check]
+      │         │
+      └────┬────┘
+           │
+       [Build]
+           │
+      ┌────┴────┐
+      │         │
+   [Test:Unit] [Test:Integration]
+      │         │
+      └────┬────┘
+           │
+      [Docker Build]
+           │
+      [Security Scan]
+           │
+      [Deploy to Prod]
+           │
+      [Slack Notify]
+
+   This graph determines the YAML job structure and the `needs:` arrays.
+
+STEP 4 — YAML GENERATION
+   The system generates a complete, annotated YAML configuration file.
+   Every section includes inline comments explaining the choice made.
+
+   What the generated YAML includes:
+
+   a) Trigger configuration
+      - Correct branch filters, path filters, PR event types
+      - Concurrency groups to cancel stale runs on re-push
+      - Skip conditions (e.g. skip deploy on [skip ci] in commit message)
+
+   b) Job definitions
+      - Correct runner selection (ubuntu-latest, macos-latest, etc.)
+      - Strategy matrix for multi-version testing if applicable
+      - Timeout limits to prevent hung jobs consuming minutes/credits
+      - Fail-fast configuration
+
+   c) Checkout & setup steps
+      - actions/checkout with appropriate fetch-depth
+      - Language runtime setup (actions/setup-node, setup-python, etc.)
+      - Correct version pinning
+
+   d) Dependency caching
+      - Cache keys based on lock files (package-lock.json, Pipfile.lock)
+      - Restore keys for partial cache hits
+      - Cache paths for node_modules, .venv, ~/.cargo, etc.
+      - Correct cache invalidation strategy
+
+   e) Environment variables & secrets
+      - Placeholders for secrets (never hardcoded values)
+      - Correct use of ${{ secrets.X }} syntax
+      - Environment-specific variable scoping
+
+   f) Conditional logic
+      - if: conditions for environment-specific steps
+      - Success/failure branch handling
+      - Manual approval gates for production deployments
+
+   g) Artifact upload/download
+      - Passing build artifacts between jobs
+      - Test result uploads for GitHub PR annotations
+
+   h) Notifications
+      - Slack webhook integration
+      - Email notification on failure
+      - GitHub status checks
+
+STEP 5 — VISUAL DIAGRAM RENDERING
+   Alongside the YAML, a visual flow diagram is rendered showing:
+     • Each job as a labeled node with its icon (test tube, Docker, etc.)
+     • Dependency arrows between jobs
+     • Parallel branches shown side by side
+     • Gate conditions shown on dependency edges ("if: success()")
+     • Color coding: triggers (blue), jobs (card), deploy (green)
+
+   This diagram is interactive:
+     • Hover a job node to see its steps summary
+     • Click a node to jump to that section in the YAML output
+     • Export the diagram as PNG or SVG
+
+STEP 6 — COPY-PASTE READY OUTPUT
+   The final YAML is presented in a code block with:
+     • Syntax highlighting
+     • One-click copy to clipboard
+     • Download as a file
+     • Path annotation: ".github/workflows/ci.yml" (or equivalent)
+
+   For GitLab CI, the output is a ".gitlab-ci.yml". For CircleCI,
+   it is a ".circleci/config.yml". The format is auto-selected based
+   on the platform mentioned in the description.
+
+
+─────────────────────────────────────────────────────────────────────
+SUPPORTED CI/CD PLATFORMS
+─────────────────────────────────────────────────────────────────────
+
+GITHUB ACTIONS
+  Full support for:
+    - Reusable workflows (workflow_call)
+    - Composite actions
+    - Environments with protection rules
+    - OIDC-based cloud authentication (no stored credentials)
+    - GitHub Packages / GHCR integration
+    - Dependabot auto-merge workflows
+    - Release workflows with changelog generation
+
+GITLAB CI
+  Full support for:
+    - include / extends / anchors
+    - Environments and protected branches
+    - GitLab Container Registry
+    - Auto DevOps patterns
+    - GitLab Pages deployment
+    - Merge request pipelines
+
+CIRCLECI
+  Full support for:
+    - Orbs for common integrations
+    - Workflows with approval jobs
+    - Resource class selection
+    - Docker executor vs machine executor
+
+BITBUCKET PIPELINES
+  Full support for:
+    - Parallel steps
+    - Deployment environments
+    - Pipes for common integrations
+
+JENKINS (Declarative Pipeline)
+  Full support for:
+    - Stages and parallel stages
+    - Agent configuration
+    - Shared libraries
+    - Blue Ocean-compatible structure
+
+
+─────────────────────────────────────────────────────────────────────
+INTELLIGENT DEFAULTS & BEST PRACTICES APPLIED
+─────────────────────────────────────────────────────────────────────
+
+The builder automatically applies the following best practices without
+the user needing to specify them:
+
+SECURITY
+  • Pins third-party actions to a full commit SHA (not a mutable tag)
+    e.g.  uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    instead of:  uses: actions/checkout@v4
+    (prevents supply chain attacks on CI)
+  • Uses OIDC for cloud authentication where available
+  • Secrets are never echoed or printed in logs
+  • Minimum required permissions declared with `permissions:` block
+
+PERFORMANCE
+  • Dependency caching configured to maximize cache hit rate
+  • Long-running tests split into parallel matrix jobs
+  • Build artifacts passed between jobs via cache/upload instead of
+    re-running build steps
+  • `concurrency:` group set to cancel in-progress runs on re-push
+
+RELIABILITY
+  • `timeout-minutes:` set on all jobs to prevent runaway billing
+  • `continue-on-error:` used only where appropriate (e.g. coverage report)
+  • Retry logic added for flaky network-dependent steps
+
+COST
+  • Expensive jobs (deploy, Docker build) gated behind cheaper jobs
+    so failed tests abort the pipeline before wasting compute
+  • Self-hosted runner hints added when the job description implies
+    GPU or large memory requirements
+
+
+─────────────────────────────────────────────────────────────────────
+EXAMPLE — FULL END TO END
+─────────────────────────────────────────────────────────────────────
+
+User input:
+  "I have a TypeScript monorepo using pnpm. On every PR to main, run
+   ESLint and TypeScript type checking in parallel, then run Vitest.
+   On merge to main, build and push a Docker image to GHCR, then
+   deploy to Fly.io. Send a Slack message on failure."
+
+Generated GitHub Actions output (condensed):
+
+  name: CI/CD Pipeline
+
+  on:
+    pull_request:
+      branches: [main]
+    push:
+      branches: [main]
+
+  concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+  permissions:
+    contents: read
+    packages: write   # for GHCR push
+
+  jobs:
+    lint:
+      name: ESLint
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      steps:
+        - uses: actions/checkout@<sha>
+        - uses: pnpm/action-setup@<sha>
+          with: { version: 9 }
+        - uses: actions/setup-node@<sha>
+          with: { node-version: 20, cache: pnpm }
+        - run: pnpm install --frozen-lockfile
+        - run: pnpm lint
+
+    typecheck:
+      name: TypeScript
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      steps:
+        - uses: actions/checkout@<sha>
+        - uses: pnpm/action-setup@<sha>
+        - uses: actions/setup-node@<sha>
+          with: { node-version: 20, cache: pnpm }
+        - run: pnpm install --frozen-lockfile
+        - run: pnpm typecheck
+
+    test:
+      name: Vitest
+      needs: [lint, typecheck]
+      runs-on: ubuntu-latest
+      timeout-minutes: 20
+      steps:
+        - uses: actions/checkout@<sha>
+        - uses: pnpm/action-setup@<sha>
+        - uses: actions/setup-node@<sha>
+          with: { node-version: 20, cache: pnpm }
+        - run: pnpm install --frozen-lockfile
+        - run: pnpm test
+
+    deploy:
+      name: Build & Deploy
+      needs: [test]
+      if: github.ref == 'refs/heads/main'
+      runs-on: ubuntu-latest
+      timeout-minutes: 30
+      steps:
+        - uses: actions/checkout@<sha>
+        - name: Log in to GHCR
+          uses: docker/login-action@<sha>
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+        - name: Build and push image
+          uses: docker/build-push-action@<sha>
+          with:
+            push: true
+            tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+        - name: Deploy to Fly.io
+          uses: superfly/flyctl-actions@<sha>
+          with:
+            args: deploy --image ghcr.io/${{ github.repository }}:${{ github.sha }}
+          env:
+            FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        - name: Notify Slack on failure
+          if: failure()
+          uses: slackapi/slack-github-action@<sha>
+          with:
+            payload: |
+              {"text": "Deploy failed for ${{ github.repository }} on ${{ github.sha }}"}
+          env:
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+─────────────────────────────────────────────────────────────────────
+USE CASES
+─────────────────────────────────────────────────────────────────────
+
+• GREENFIELD PROJECTS
+  Set up a complete CI/CD pipeline from scratch in seconds when
+  starting a new project.
+
+• PLATFORM MIGRATION
+  Migrating from Jenkins to GitHub Actions? Describe your existing
+  pipeline in words; get the equivalent config for the new platform.
+
+• PIPELINE DEBUGGING
+  Paste your broken pipeline YAML and describe what it should do;
+  get a corrected version with explanation of what was wrong.
+
+• ONBOARDING
+  New engineers who have never written GitHub Actions can generate
+  correct pipelines and learn from the annotated output.
+
+• AUDIT
+  Compare your existing pipeline against a freshly generated
+  best-practice version to find gaps in security or efficiency.
+
+
+═══════════════════════════════════════════════════════════════════

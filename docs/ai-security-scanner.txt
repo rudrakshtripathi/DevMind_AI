@@ -1,0 +1,268 @@
+═══════════════════════════════════════════════════════════════════
+                     AI SECURITY SCANNER
+              DevMind AI — Feature Deep Dive
+═══════════════════════════════════════════════════════════════════
+
+
+OVERVIEW
+────────
+The AI Security Scanner is an automated vulnerability detection engine
+that analyzes source code and dependencies for security weaknesses. It
+works like having a senior security engineer review every line of your
+code, except it runs in under a second and covers patterns that human
+reviewers often miss due to sheer volume.
+
+It targets the OWASP Top 10 vulnerability classes and beyond, supports
+every major programming language, and returns structured results with
+severity scores and fix guidance — not just a list of warnings.
+
+
+─────────────────────────────────────────────────────────────────────
+STEP-BY-STEP WORKFLOW
+─────────────────────────────────────────────────────────────────────
+
+STEP 1 — INPUT SUBMISSION
+   The user pastes raw source code into the scanner's input panel.
+   This can be:
+     • A single function or method
+     • An entire file (e.g. auth.ts, db.py, routes.go)
+     • Multiple files pasted together
+     • A code snippet copied directly from an IDE
+
+   No repository connection is required. The scanner works entirely
+   on the submitted text. Nothing is stored beyond the current session.
+
+STEP 2 — LANGUAGE DETECTION
+   The scanner automatically identifies the programming language from
+   syntax patterns and file structure cues. Supported languages:
+     Python, JavaScript, TypeScript, Go, Rust, Java, Ruby, C++,
+     PHP, Kotlin, Swift, Scala, C#, Elixir, and more.
+
+   Language detection determines which vulnerability rule sets apply.
+   A Python file uses Python-specific OWASP rules; a Go file uses
+   Go-specific patterns for concurrency and memory safety issues, etc.
+
+STEP 3 — MULTI-PASS STATIC ANALYSIS
+   The scanner runs the code through several analysis passes:
+
+   Pass A — Pattern Matching
+     Regex and AST-based rules scan for known vulnerability signatures.
+     Examples:
+       - String interpolation directly into SQL queries → SQL injection
+       - innerHTML or document.write with user input → XSS
+       - eval() or exec() with dynamic content → Code injection
+       - Hardcoded strings that look like credentials → Secret exposure
+
+   Pass B — Data Flow Analysis
+     The scanner traces the flow of user-controlled input (sources)
+     through the codebase to sensitive operations (sinks).
+     Example: form input → database query without sanitization = HIGH risk.
+     This catches vulnerabilities that pattern matching alone misses
+     because the dangerous call is several function hops away from the
+     user input.
+
+   Pass C — Dependency Audit
+     If the code contains import/require statements, the scanner
+     identifies library names and versions referenced. It cross-checks
+     these against a known CVE (Common Vulnerabilities and Exposures)
+     database. A package with a known RCE vulnerability in the version
+     range used will be flagged immediately.
+
+   Pass D — Configuration & Secret Detection
+     Scans for:
+       - API keys or tokens committed inline
+       - Insecure cipher configurations (e.g. MD5 for passwords, ECB mode)
+       - Disabled TLS verification flags
+       - Overly permissive CORS or CSP headers
+       - Debug mode enabled in production-facing code
+
+STEP 4 — SEVERITY SCORING
+   Each detected issue is assigned a severity score using a CVSS-like
+   model (Common Vulnerability Scoring System):
+
+     CRITICAL (9.0–10.0)
+       Remote code execution, authentication bypass, full data exposure.
+       Requires immediate action before any deployment.
+
+     HIGH (7.0–8.9)
+       SQL injection, XSS, CSRF, insecure direct object references.
+       Should be fixed in the current sprint.
+
+     MEDIUM (4.0–6.9)
+       Missing rate limiting, verbose error messages, weak session tokens.
+       Plan remediation within the next release cycle.
+
+     LOW (0.1–3.9)
+       Informational issues, deprecated API usage, minor misconfigurations.
+       Address when convenient.
+
+   The scanner also produces an overall Severity Score for the submitted
+   code block, e.g. "4.1 / 10", giving a quick health signal.
+
+STEP 5 — FIX GUIDANCE GENERATION
+   For each vulnerability, the scanner generates:
+
+   a) Root cause explanation
+      Plain-English description of why this is dangerous, what an
+      attacker could do if they exploited it, and which CWE or OWASP
+      category it falls under.
+
+   b) Affected line references
+      The exact line(s) in the submitted code responsible for the issue.
+
+   c) Remediation code snippet
+      A corrected version of the vulnerable code showing the specific
+      fix — parameterized queries instead of string concatenation,
+      escaped output instead of raw injection, etc.
+
+   d) Further reading links
+      References to OWASP documentation or CVE advisories relevant
+      to this specific issue.
+
+STEP 6 — STRUCTURED RESULTS DISPLAY
+   Results are presented in a structured report:
+
+     ┌─────────────────────────────────────────┐
+     │  Security Analysis — Complete           │
+     │  Overall Score: 4.1 / 10               │
+     │                                         │
+     │  ● 0 Critical vulnerabilities          │
+     │  ● 1 High    — SQL injection risk      │
+     │  ● 2 Medium  — Input validation        │
+     │  ● 1 Low     — Verbose error message   │
+     └─────────────────────────────────────────┘
+
+   Expanding any finding shows the full detail card with line number,
+   explanation, and remediation snippet.
+
+
+─────────────────────────────────────────────────────────────────────
+VULNERABILITY CLASSES COVERED
+─────────────────────────────────────────────────────────────────────
+
+INJECTION ATTACKS
+  • SQL Injection (classic, blind, time-based)
+  • NoSQL Injection (MongoDB $where, Elasticsearch)
+  • Command Injection (shell exec with user input)
+  • LDAP Injection
+  • XML/XXE Injection
+  • Template Injection (Jinja2, Handlebars, Twig)
+
+CROSS-SITE SCRIPTING (XSS)
+  • Reflected XSS (user input echoed in response)
+  • Stored XSS (user input persisted and later rendered)
+  • DOM-based XSS (client-side script manipulation)
+
+AUTHENTICATION & SESSION ISSUES
+  • Hardcoded credentials in source code
+  • Weak or missing password hashing (plain text, MD5, SHA-1)
+  • Insecure session token generation
+  • Missing HttpOnly / Secure flags on cookies
+  • JWT vulnerabilities (none algorithm, weak secret)
+
+CROSS-SITE REQUEST FORGERY (CSRF)
+  • Missing CSRF tokens on state-changing endpoints
+  • Overly permissive CORS configuration
+
+ACCESS CONTROL
+  • Insecure Direct Object References (IDOR)
+  • Missing authorization checks before data access
+  • Privilege escalation patterns
+
+CRYPTOGRAPHY
+  • Use of broken algorithms (MD5, SHA-1, DES, RC4)
+  • ECB mode encryption
+  • Hardcoded IV or key material
+  • Insufficient key length
+
+SENSITIVE DATA EXPOSURE
+  • API keys, tokens, or passwords in source
+  • Sensitive data logged to console or files
+  • Debug output in production paths
+
+DEPENDENCY VULNERABILITIES
+  • Known CVEs in npm, pip, Maven, Cargo, Go module packages
+  • Packages with no maintained versions
+
+SECURITY MISCONFIGURATION
+  • Disabled TLS verification
+  • Debug mode on
+  • Default credentials
+  • Directory listing enabled
+
+
+─────────────────────────────────────────────────────────────────────
+EXAMPLE — SQL INJECTION DETECTION
+─────────────────────────────────────────────────────────────────────
+
+Submitted code (Python):
+  def get_user(username):
+      query = "SELECT * FROM users WHERE username = '" + username + "'"
+      return db.execute(query)
+
+Scanner output:
+  SEVERITY: HIGH (8.2 / 10)
+  TYPE: SQL Injection (CWE-89)
+  LINE: 2
+
+  Issue:
+    String concatenation is used to construct a SQL query with user-
+    controlled input. An attacker can submit:
+      username = "' OR '1'='1"
+    to bypass authentication, or:
+      username = "'; DROP TABLE users; --"
+    to destroy data.
+
+  Fix:
+    def get_user(username):
+        query = "SELECT * FROM users WHERE username = %s"
+        return db.execute(query, (username,))
+
+    Use parameterized queries (prepared statements). The database
+    driver handles escaping; user input never becomes part of the
+    query syntax.
+
+  Reference: OWASP A03:2021 – Injection
+
+
+─────────────────────────────────────────────────────────────────────
+USE CASES
+─────────────────────────────────────────────────────────────────────
+
+• PRE-COMMIT REVIEW
+  Paste changed files before committing. Catch issues before they
+  enter the main branch or trigger CI.
+
+• CODE REVIEW AUGMENTATION
+  During pull request review, scan the diff to surface issues that
+  reviewers might miss among hundreds of changed lines.
+
+• LEGACY CODE AUDIT
+  Drop in old, poorly-documented code to get an instant map of its
+  security posture before refactoring or expanding it.
+
+• ONBOARDING NEW CONTRIBUTORS
+  New team members scan their first contributions to learn secure
+  coding practices via immediate, contextual feedback.
+
+• DEPENDENCY HEALTH CHECK
+  Paste package.json, requirements.txt, or go.mod to audit all
+  dependencies for known CVEs in one pass.
+
+• INCIDENT RESPONSE
+  When a breach or suspicious behavior is detected, quickly scan
+  the relevant code paths to confirm or rule out vulnerabilities.
+
+
+─────────────────────────────────────────────────────────────────────
+DATA PRIVACY
+─────────────────────────────────────────────────────────────────────
+
+• Code is analyzed in memory and is not written to persistent storage.
+• Each user's scans are private and isolated; other users cannot see
+  your submissions or results.
+• No code is used to train models or shared with third parties.
+• Sessions expire and all data is cleared on logout.
+
+
+═══════════════════════════════════════════════════════════════════
