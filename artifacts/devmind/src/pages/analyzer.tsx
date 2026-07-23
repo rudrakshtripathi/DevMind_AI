@@ -649,6 +649,8 @@ export default function AnalyzerPage() {
         setSubmittedIds((ids) => [data.id, ...ids]);
         setLogInput("");
         qc.invalidateQueries({ queryKey: ["/api/analyzer/incidents"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/recent"] });
         toast({ title: "Incident submitted", description: "AI SRE is investigating the failure…" });
       },
       onError: () => toast({ title: "Failed to submit", variant: "destructive" }),

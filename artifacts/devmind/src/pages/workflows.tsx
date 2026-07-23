@@ -670,6 +670,8 @@ export default function WorkflowsPage() {
         setSubmittedIds((ids) => [data.id, ...ids]);
         setDescription("");
         qc.invalidateQueries({ queryKey: ["/api/workflows"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/recent"] });
         toast({ title: "Workflow submitted", description: "AI architect is designing your production workflow…" });
       },
       onError: () => {

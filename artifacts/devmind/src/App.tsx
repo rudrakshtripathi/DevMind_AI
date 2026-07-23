@@ -1,10 +1,11 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Layout } from "@/components/layout";
 import LandingPage from "@/pages/landing";
+import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import SecurityPage from "@/pages/security";
 import WorkflowsPage from "@/pages/workflows";
@@ -24,7 +25,8 @@ const queryClient = new QueryClient({
 });
 
 function AppRouter() {
-  const { isLoading, isAuthenticated, login } = useAuth();
+  const { isLoading, isAuthenticated, refresh } = useAuth();
+  const [, navigate] = useLocation();
 
   if (isLoading) {
     return (
@@ -35,13 +37,23 @@ function AppRouter() {
   }
 
   if (!isAuthenticated) {
-    return <LandingPage onLogin={login} />;
+    return (
+      <Switch>
+        <Route path="/auth">
+          <AuthPage onAuthSuccess={() => { refresh(); navigate("/"); }} />
+        </Route>
+        <Route>
+          <LandingPage onLogin={() => { window.location.href = "/auth"; }} />
+        </Route>
+      </Switch>
+    );
   }
 
   return (
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/auth">{() => <Redirect to="/" />}</Route>
         <Route path="/security" component={SecurityPage} />
         <Route path="/workflows" component={WorkflowsPage} />
         <Route path="/codebase" component={CodebasePage} />

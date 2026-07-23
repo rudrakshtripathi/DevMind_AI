@@ -14,42 +14,48 @@ interface AuthState {
   isAuthenticated: boolean;
   login: () => void;
   logout: () => void;
+  refresh: () => void;
 }
 
 export function useAuth(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchUser = useCallback(() => {
+    setIsLoading(true);
     fetch("/api/auth/user", { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<{ user: AuthUser | null }>;
       })
       .then((data) => {
-        if (!cancelled) {
-          setUser(data.user ?? null);
-          setIsLoading(false);
-        }
+        setUser(data.user ?? null);
+        setIsLoading(false);
       })
       .catch(() => {
-        if (!cancelled) {
-          setUser(null);
-          setIsLoading(false);
-        }
+        setUser(null);
+        setIsLoading(false);
       });
-    return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const login = useCallback(() => {
-    const base = (import.meta.env.BASE_URL ?? "/").replace(/\/+$/, "") || "/";
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(base)}`;
-  }, []);
+    // For local auth, refreshing user state after login form submit
+    fetchUser();
+  }, [fetchUser]);
 
   const logout = useCallback(() => {
-    window.location.href = "/api/logout";
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      .then(() => {
+        setUser(null);
+      })
+      .catch(() => {
+        setUser(null);
+      });
   }, []);
 
-  return { user, isLoading, isAuthenticated: !!user, login, logout };
+  return { user, isLoading, isAuthenticated: !!user, login, logout, refresh: fetchUser };
 }

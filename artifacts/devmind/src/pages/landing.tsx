@@ -79,7 +79,7 @@ function Navbar({ onLogin }: { onLogin: () => void }) {
         </nav>
 
         <Button onClick={onLogin} size="sm" className="gap-2 font-medium">
-          Log in with Google
+          Sign in
           <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -935,7 +935,7 @@ const steps = [
   {
     n: "01",
     title: "Sign in securely",
-    body: "Log in with Google in one click. Your workspace is private and isolated — no one else sees your code or results.",
+    body: "Create an account or sign in with your email. Your workspace is private and isolated — no one else sees your code or results.",
     icon: Lock,
   },
   {
@@ -1104,7 +1104,7 @@ const faqs = [
   },
   {
     q: "How does login work?",
-    a: "We use Google OAuth via Replit's secure OIDC infrastructure. You click 'Log in with Google', authorize once, and you're in. We never store your password.",
+    a: "We use a secure email and password authentication system. Create an account, sign in, and you're ready to go. Your password is securely hashed and we never store it in plain text.",
   },
   {
     q: "Is my code safe? Do you store it?",
@@ -1185,7 +1185,7 @@ function FinalCTA({ onLogin }: { onLogin: () => void }) {
               Join developers who use DevMind AI to catch vulnerabilities, automate workflows, and ship with confidence.
             </p>
             <Button onClick={onLogin} size="lg" className="gap-2 px-8 font-semibold text-base h-12">
-              Start for free — Log in with Google
+              Start for free — Create your account
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

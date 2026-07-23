@@ -479,6 +479,8 @@ export default function CodebasePage() {
         setUploadedFiles([]);
         setPasteContent("");
         qc.invalidateQueries({ queryKey: ["/api/codebase/projects"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/recent"] });
         toast({ title: "Project created", description: "Indexing your codebase…" });
       },
       onError: () => {

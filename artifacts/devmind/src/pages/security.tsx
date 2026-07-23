@@ -736,6 +736,8 @@ export default function SecurityPage() {
         setCode("");
         setFilename("");
         qc.invalidateQueries({ queryKey: ["/api/security/scans"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        qc.invalidateQueries({ queryKey: ["/api/dashboard/recent"] });
         toast({ title: "Audit started", description: "AI security engineer is analyzing your code…" });
       },
       onError: () => toast({ title: "Scan failed", variant: "destructive" }),

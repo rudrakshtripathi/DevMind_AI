@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: devmind
+      POSTGRES_PASSWORD: devmind_secret
+      POSTGRES_DB: devmind
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://devmind:devmind_secret@db:5432/devmind
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PORT: "8080"
+      NODE_ENV: production
+      STATIC_DIR: /app/artifacts/devmind/dist/public
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
