@@ -27,7 +27,6 @@ async function buildAll() {
       "better-sqlite3",
       "sqlite3",
       "canvas",
-      "bcryptjs",
       "argon2",
       "fsevents",
       "re2",
@@ -128,3 +127,4 @@ buildAll().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
