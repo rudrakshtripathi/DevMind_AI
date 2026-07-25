@@ -6,7 +6,6 @@
   "outputDirectory": "artifacts/devmind/dist/public",
   "functions": {
     "api/index.mjs": {
-      "runtime": "@vercel/node@3",
       "maxDuration": 60,
       "memory": 1024,
       "includeFiles": "artifacts/api-server/dist/**"
