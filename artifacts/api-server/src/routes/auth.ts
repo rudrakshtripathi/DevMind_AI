@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import {
   GetCurrentAuthUserResponse,
   LogoutMobileSessionResponse,

@@ -12,7 +12,8 @@
     "db:push": "dotenv -- pnpm --filter @workspace/db push",
     "db:push:force": "dotenv -- pnpm --filter @workspace/db push-force",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "vercel-build": "pnpm run build"
   },
   "private": true,
   "devDependencies": {
