@@ -1,3 +1,10 @@
 // Vercel Serverless Function — wraps the bundled Express app
-const app = require("../artifacts/api-server/dist/vercel.mjs");
-module.exports = app.default || app;
+let handler;
+
+module.exports = async (req, res) => {
+  if (!handler) {
+    const app = await import("../artifacts/api-server/dist/vercel.mjs");
+    handler = app.default || app;
+  }
+  return handler(req, res);
+};
